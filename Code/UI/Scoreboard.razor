@@ -191,10 +191,10 @@
 
                                             <div class="shop-meta">
                                                 <label class="shop-price">@FormatCurrency( item.Price )</label>
-                                                @if ( item.PrinterType is not null )
+                                                @if ( !string.IsNullOrWhiteSpace( item.PrinterDefinitionPath ) )
                                                 {
                                                     <label class="shop-meta-item">@GetPrinterRateText( item )</label>
-                                                    <label class="shop-meta-item">Owned: @LocalOwnedPrinterCount / @MoneyPrinterCatalog.MaxOwnedPerPlayer</label>
+                                                    <label class="shop-meta-item">Owned: @LocalOwnedPrinterCount / @MoneyPrinterDefinition.MaxOwnedPerPlayer</label>
                                                     <Button Text="Buy"
                                                             Icon="$"
                                                             class="menu-action primary shop-buy"
@@ -288,18 +288,18 @@
 
     sealed class ShopItem
     {
-        public ShopItem( string name, int price, string description, MoneyPrinterType? printerType = null )
+        public ShopItem( string name, int price, string description, string printerDefinitionPath = null )
         {
             Name = name;
             Price = price;
             Description = description;
-            PrinterType = printerType;
+            PrinterDefinitionPath = printerDefinitionPath;
         }
 
         public string Name { get; }
         public int Price { get; }
         public string Description { get; }
-        public MoneyPrinterType? PrinterType { get; }
+        public string PrinterDefinitionPath { get; }
     }
 
     static readonly NavigationItem[] NavigationItems =
@@ -332,45 +332,25 @@
         new JobPlaceholder( "Hobo", "Civilian", 0, "2 slots", "/hobo", "Survive with almost nothing and lean into street-level roleplay." )
     };
 
-    static readonly ShopSection[] ShopSections =
+    static readonly ShopItem[] ShipmentItems =
     {
-        new ShopSection(
-            "Printers",
-            "Purchase money printers with server-authoritative placement and generation.",
-            MoneyPrinterCatalog.All
-                .Select( x => new ShopItem( x.Title, x.Price, x.Description, x.Type ) )
-                .ToArray()
-        ),
-        new ShopSection(
-            "Shipments",
-            "Bundled gear purchases with the classic DarkRP structure.",
-            new[]
-            {
-                new ShopItem( "Pistol Shipment", 2200, "Starter weapon crate placeholder for sidearms." ),
-                new ShopItem( "SMG Shipment", 4800, "Mid-tier automatic shipment placeholder." ),
-                new ShopItem( "Rifle Shipment", 7200, "High-end firearm shipment placeholder." )
-            }
-        ),
-        new ShopSection(
-            "Weapons",
-            "Single-item utility purchases that normally sit beside shipments.",
-            new[]
-            {
-                new ShopItem( "Lockpick", 150, "Entry tool placeholder for criminal utility." ),
-                new ShopItem( "Medkit", 400, "Support item placeholder for healing loadouts." ),
-                new ShopItem( "Armor Plate", 600, "Defensive equipment placeholder." )
-            }
-        ),
-        new ShopSection(
-            "Ammo",
-            "Resupply blocks for the later weapon-system integration.",
-            new[]
-            {
-                new ShopItem( "Pistol Ammo", 60, "Small caliber ammo placeholder." ),
-                new ShopItem( "Buckshot Box", 90, "Shotgun shell refill placeholder." ),
-                new ShopItem( "Rifle Ammo", 120, "Rifle caliber refill placeholder." )
-            }
-        )
+        new ShopItem( "Pistol Shipment", 2200, "Starter weapon crate placeholder for sidearms." ),
+        new ShopItem( "SMG Shipment", 4800, "Mid-tier automatic shipment placeholder." ),
+        new ShopItem( "Rifle Shipment", 7200, "High-end firearm shipment placeholder." )
+    };
+
+    static readonly ShopItem[] WeaponItems =
+    {
+        new ShopItem( "Lockpick", 150, "Entry tool placeholder for criminal utility." ),
+        new ShopItem( "Medkit", 400, "Support item placeholder for healing loadouts." ),
+        new ShopItem( "Armor Plate", 600, "Defensive equipment placeholder." )
+    };
+
+    static readonly ShopItem[] AmmoItems =
+    {
+        new ShopItem( "Pistol Ammo", 60, "Small caliber ammo placeholder." ),
+        new ShopItem( "Buckshot Box", 90, "Shotgun shell refill placeholder." ),
+        new ShopItem( "Rifle Ammo", 120, "Rifle caliber refill placeholder." )
     };
 
     ScoreboardPage _currentPage = ScoreboardPage.Players;
@@ -387,6 +367,8 @@
     int LocalOwnedPrinterCount => MoneyPrinter.CountOwned( Connection.Local );
     string LocalPlayerJob => string.IsNullOrWhiteSpace( LocalPlayer?.JobTitle ) ? "Citizen" : LocalPlayer.JobTitle;
     bool CanDropMoney => TryGetDropMoneyAmount( out var amount ) && LocalPlayer?.CanAfford( amount ) == true;
+    IReadOnlyList<MoneyPrinterDefinition> PrinterDefinitions => MoneyPrinterDefinition.GetAll();
+    ShopSection[] ShopSections => BuildShopSections();
 
     string LocalPlayerName
         => Scene.GetAll<PlayerData>().FirstOrDefault( x => x.IsMe )?.DisplayName ?? "Current Player";
@@ -422,26 +404,58 @@
 
     bool CanBuyPrinter( ShopItem item )
     {
-        return item.PrinterType is not null
+        return !string.IsNullOrWhiteSpace( item.PrinterDefinitionPath )
             && LocalPlayer?.CanAfford( item.Price ) == true
-            && LocalOwnedPrinterCount < MoneyPrinterCatalog.MaxOwnedPerPlayer;
+            && LocalOwnedPrinterCount < MoneyPrinterDefinition.MaxOwnedPerPlayer;
     }
 
     string GetPrinterRateText( ShopItem item )
     {
-        if ( item.PrinterType is not MoneyPrinterType type )
+        if ( string.IsNullOrWhiteSpace( item.PrinterDefinitionPath ) )
             return string.Empty;
 
-        var definition = MoneyPrinterCatalog.Get( type );
+        var definition = MoneyPrinterDefinition.Get( item.PrinterDefinitionPath );
+        if ( definition is null )
+            return string.Empty;
+
         return $"{FormatCurrency( definition.MoneyPerTick )} / {definition.Interval:0}s";
     }
 
     void BuyPrinter( ShopItem item )
     {
-        if ( item.PrinterType is not MoneyPrinterType type )
+        if ( string.IsNullOrWhiteSpace( item.PrinterDefinitionPath ) )
             return;
 
-        LocalPlayer?.RequestBuyPrinter( type );
+        LocalPlayer?.RequestBuyPrinter( item.PrinterDefinitionPath );
+    }
+
+    ShopSection[] BuildShopSections()
+    {
+        return
+        [
+            new ShopSection(
+                "Printers",
+                "Purchase money printers with server-authoritative placement and generation.",
+                PrinterDefinitions
+                    .Select( x => new ShopItem( x.Title, x.Price, x.Description, x.ResourcePath ) )
+                    .ToArray()
+            ),
+            new ShopSection(
+                "Shipments",
+                "Bundled gear purchases with the classic DarkRP structure.",
+                ShipmentItems
+            ),
+            new ShopSection(
+                "Weapons",
+                "Single-item utility purchases that normally sit beside shipments.",
+                WeaponItems
+            ),
+            new ShopSection(
+                "Ammo",
+                "Resupply blocks for the later weapon-system integration.",
+                AmmoItems
+            )
+        ];
     }
 
     IEnumerable<PlayerData> GetPlayers()
@@ -518,5 +532,22 @@
     }
 
     protected override int BuildHash()
-        => System.HashCode.Combine( PlayerCount, LocalPlayerMoney, LocalOwnedPrinterCount, LocalPlayerJob, _currentPage, _selectedShopSection, _dropMoneyValue );
+    {
+        var hash = new System.HashCode();
+        hash.Add( PlayerCount );
+        hash.Add( LocalPlayerMoney );
+        hash.Add( LocalOwnedPrinterCount );
+        hash.Add( LocalPlayerJob );
+        hash.Add( _currentPage );
+        hash.Add( _selectedShopSection );
+        hash.Add( _dropMoneyValue );
+        hash.Add( PrinterDefinitions.Count );
+
+        foreach ( var definition in PrinterDefinitions )
+        {
+            hash.Add( definition.ResourcePath );
+        }
+
+        return hash.ToHashCode();
+    }
 }

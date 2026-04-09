@@ -3,14 +3,15 @@ using Sandbox.UI;
 public sealed partial class Player
 {
 	[Rpc.Host]
-	public void RequestBuyPrinter( MoneyPrinterType type )
+	public void RequestBuyPrinter( string definitionPath )
 	{
-		if ( Rpc.Caller != Network.Owner || !MoneyPrinterCatalog.TryGet( type, out var definition ) )
+		var definition = MoneyPrinterDefinition.Get( definitionPath );
+		if ( Rpc.Caller != Network.Owner || definition is null || definition.Prefab is null )
 			return;
 
-		if ( MoneyPrinter.CountOwned( Network.Owner ) >= MoneyPrinterCatalog.MaxOwnedPerPlayer )
+		if ( MoneyPrinter.CountOwned( Network.Owner ) >= MoneyPrinterDefinition.MaxOwnedPerPlayer )
 		{
-			Notices.SendNotice( Network.Owner, "block", Color.Red, $"You already own {MoneyPrinterCatalog.MaxOwnedPerPlayer} printers.", 3 );
+			Notices.SendNotice( Network.Owner, "block", Color.Red, $"You already own {MoneyPrinterDefinition.MaxOwnedPerPlayer} printers.", 3 );
 			return;
 		}
 
@@ -20,7 +21,7 @@ public sealed partial class Player
 			return;
 		}
 
-		if ( MoneyPrinter.TrySpawn( this, type ) )
+		if ( MoneyPrinter.TrySpawn( this, definition ) )
 		{
 			Notices.SendNotice( Network.Owner, "$", Color.Green, $"{definition.Title} purchased.", 3 );
 			return;

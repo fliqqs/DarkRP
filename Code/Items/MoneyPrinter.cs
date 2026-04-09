@@ -2,10 +2,9 @@ using Sandbox.UI;
 
 public sealed class MoneyPrinter : Component, Component.IPressable
 {
-	public const string PrefabPath = "entities/printer/money_printer.prefab";
 	const string BaseMaterialPath = "materials/printer/base/base.vmat";
 	const string FanMaterialPath = "materials/printer/fan/fan.vmat";
-	static BBox? CachedBounds;
+	static readonly Dictionary<string, BBox> CachedBounds = new();
 
 	List<TextRenderer> Labels = new();
 	ModelRenderer BaseRenderer = default;
@@ -13,15 +12,15 @@ public sealed class MoneyPrinter : Component, Component.IPressable
 	GameObject FanObject = default;
 	TimeSince _timeSincePrinted;
 
-	[Property, Sync( SyncFlags.FromHost ), Change( nameof( OnPrinterTypeChanged ) )]
-	public MoneyPrinterType PrinterType { get; set; } = MoneyPrinterType.Bronze;
+	[Property, Sync( SyncFlags.FromHost ), Change( nameof( OnDefinitionPathChanged ) )]
+	public string DefinitionPath { get; set; } = MoneyPrinterDefinition.DefaultResourcePath;
 
 	[Property, Sync( SyncFlags.FromHost ), Change( nameof( OnStoredMoneyChanged ) )]
 	public int StoredMoney { get; set; }
 
 	IPressable.Tooltip? IPressable.GetTooltip( IPressable.Event e )
 	{
-		if ( !MoneyPrinterCatalog.TryGet( PrinterType, out var definition ) )
+		if ( GetDefinition() is not { } definition )
 			return null;
 
 		var description = StoredMoney > 0
@@ -49,7 +48,7 @@ public sealed class MoneyPrinter : Component, Component.IPressable
 
 	protected override void OnUpdate()
 	{
-		if ( !FanObject.IsValid() || !MoneyPrinterCatalog.TryGet( PrinterType, out _ ) )
+		if ( !FanObject.IsValid() || GetDefinition() is null )
 			return;
 
 		FanObject.LocalRotation *= Rotation.FromAxis( Vector3.Left, -900.0f * Time.Delta );
@@ -57,7 +56,7 @@ public sealed class MoneyPrinter : Component, Component.IPressable
 
 	protected override void OnFixedUpdate()
 	{
-		if ( !Networking.IsHost || !MoneyPrinterCatalog.TryGet( PrinterType, out var definition ) )
+		if ( !Networking.IsHost || GetDefinition() is not { } definition )
 			return;
 
 		if ( StoredMoney >= definition.MaxStoredMoney || _timeSincePrinted < definition.Interval )
@@ -67,7 +66,7 @@ public sealed class MoneyPrinter : Component, Component.IPressable
 		StoredMoney = Math.Min( definition.MaxStoredMoney, StoredMoney + definition.MoneyPerTick );
 	}
 
-	void OnPrinterTypeChanged( MoneyPrinterType oldType, MoneyPrinterType newType )
+	void OnDefinitionPathChanged( string oldPath, string newPath )
 	{
 		ApplyDefinition();
 		RefreshLabels();
@@ -122,7 +121,7 @@ public sealed class MoneyPrinter : Component, Component.IPressable
 
 	void ApplyDefinition()
 	{
-		if ( !MoneyPrinterCatalog.TryGet( PrinterType, out var definition ) )
+		if ( GetDefinition() is not { } definition )
 			return;
 
 		if ( BaseRenderer.IsValid() )
@@ -136,6 +135,11 @@ public sealed class MoneyPrinter : Component, Component.IPressable
 			FanRenderer.MaterialOverride = Material.Load( FanMaterialPath );
 			FanRenderer.Tint = definition.Tint;
 		}
+	}
+
+	MoneyPrinterDefinition GetDefinition()
+	{
+		return MoneyPrinterDefinition.Get( DefinitionPath );
 	}
 
 	void RefreshLabels()
@@ -169,19 +173,12 @@ public sealed class MoneyPrinter : Component, Component.IPressable
 			.Count( x => x.IsValid() && x.GameObject.GetComponent<Ownable>()?.Owner == owner );
 	}
 
-	public static bool TrySpawn( Player owner, MoneyPrinterType type )
+	public static bool TrySpawn( Player owner, MoneyPrinterDefinition definition )
 	{
-		if ( !Networking.IsHost || !owner.IsValid() || !MoneyPrinterCatalog.TryGet( type, out _ ) )
+		if ( !Networking.IsHost || !owner.IsValid() || definition is null || definition.Prefab is null )
 			return false;
 
-		var prefab = GameObject.GetPrefab( PrefabPath );
-		if ( prefab is null )
-		{
-			Log.Warning( $"Prefab not found: {PrefabPath}" );
-			return false;
-		}
-
-		var bounds = GetSpawnBounds( prefab );
+		var bounds = GetSpawnBounds( definition.Prefab );
 
 		var eyes = owner.EyeTransform;
 		var trace = Game.SceneTrace.Ray( eyes.Position, eyes.Position + eyes.Forward * 200.0f )
@@ -201,7 +198,7 @@ public sealed class MoneyPrinter : Component, Component.IPressable
 		spawnTransform.Position += spawnTransform.Up * -bounds.Mins.z;
 		spawnTransform.Rotation *= Rotation.FromYaw( GetYawCorrection( bounds ) );
 
-		var dropped = prefab.Clone( new CloneConfig
+		var dropped = GameObject.Clone( definition.Prefab, new CloneConfig
 		{
 			Transform = spawnTransform,
 			StartEnabled = false
@@ -214,7 +211,7 @@ public sealed class MoneyPrinter : Component, Component.IPressable
 			return false;
 		}
 
-		printer.PrinterType = type;
+		printer.DefinitionPath = definition.ResourcePath;
 		printer.StoredMoney = 0;
 		printer.CacheComponents();
 		printer.ApplyDefinition();
@@ -232,13 +229,15 @@ public sealed class MoneyPrinter : Component, Component.IPressable
 		return true;
 	}
 
-	static BBox GetSpawnBounds( GameObject prefab )
+	static BBox GetSpawnBounds( PrefabFile prefab )
 	{
-		if ( CachedBounds.HasValue )
-			return CachedBounds.Value;
+		var resourcePath = prefab.ResourcePath ?? MoneyPrinterDefinition.DefaultResourcePath;
+		if ( CachedBounds.TryGetValue( resourcePath, out var bounds ) )
+			return bounds;
 
-		CachedBounds = prefab.GetLocalBounds();
-		return CachedBounds.Value;
+		bounds = prefab.GetScene().GetLocalBounds();
+		CachedBounds[resourcePath] = bounds;
+		return bounds;
 	}
 
 	static float GetYawCorrection( BBox bounds )
