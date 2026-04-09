@@ -4,7 +4,7 @@
   "Category": "Criminal",
   "AccentColor": "0.84265,0.39459,0.88372,1",
   "Salary": 55,
-  "MaxPlayers": 4,
+  "MaxPlayers": 8,
   "Command": "/gangster",
   "Order": 40,
   "StartingItems": [

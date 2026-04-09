@@ -4,7 +4,7 @@
   "Category": "Civilian",
   "AccentColor": "0.7294,0.7569,0.8275,1",
   "Salary": 0,
-  "MaxPlayers": 2,
+  "MaxPlayers": 3,
   "Command": "/hobo",
   "Order": 90,
   "StartingItems": [
@@ -16,6 +16,7 @@
     "models/citizen_clothes/trousers/loosejeans/loose_jeans.clothing",
     "models/citizen_clothes/shoes/sneakers/sneakers.clothing"
   ],
+  "IsDefault": false,
   "__references": [],
   "__version": 0
 }

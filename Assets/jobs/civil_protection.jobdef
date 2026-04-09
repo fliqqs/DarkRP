@@ -4,7 +4,7 @@
   "Category": "Government",
   "AccentColor": "0.3373,0.7176,0.9765,1",
   "Salary": 65,
-  "MaxPlayers": 4,
+  "MaxPlayers": 8,
   "Command": "/cp",
   "Order": 10,
   "StartingItems": [
@@ -17,6 +17,7 @@
     "models/citizen_clothes/vest/tactical_vest/models/tactical_vest.clothing",
     "models/citizen_clothes/shoes/boots/black_boots.clothing"
   ],
+  "IsDefault": false,
   "__references": [],
   "__version": 0
 }
