@@ -19,6 +19,7 @@ public sealed partial class Player
 			return;
 
 		Money += amount;
+		SaveRoleplayData();
 	}
 
 	public bool TryTakeMoney( int amount )
@@ -27,6 +28,7 @@ public sealed partial class Player
 			return false;
 
 		Money -= amount;
+		SaveRoleplayData();
 		return true;
 	}
 
@@ -36,6 +38,7 @@ public sealed partial class Player
 			return;
 
 		Money = Math.Max( 0, amount );
+		SaveRoleplayData();
 	}
 
 	public void SetJobTitle( string title )

@@ -31,6 +31,8 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 	/// </summary>
 	void Component.INetworkListener.OnDisconnected( Connection channel )
 	{
+		Player.FindForConnection( channel )?.SaveRoleplayData();
+
 		var pd = PlayerData.For( channel );
 		if ( pd is not null )
 		{
@@ -80,6 +82,7 @@ public sealed partial class GameManager : GameObjectSystem<GameManager>, Compone
 
 		var player = playerGo.Components.Get<Player>( true );
 		player.PlayerData = playerData;
+		player.LoadRoleplayData();
 
 		var owner = Connection.Find( playerData.PlayerId );
 		playerGo.NetworkSpawn( owner );
