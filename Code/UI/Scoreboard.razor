@@ -196,10 +196,16 @@
                                                     <label class="shop-meta-item">@GetPrinterRateText( item )</label>
                                                     <label class="shop-meta-item">Owned: @LocalOwnedPrinterCount / @MoneyPrinterDefinition.MaxOwnedPerPlayer</label>
                                                     <Button Text="Buy"
-                                                            Icon="$"
                                                             class="menu-action primary shop-buy"
                                                             Disabled="@(!CanBuyPrinter( item ))"
                                                             @onclick="@(() => BuyPrinter( item ))" />
+                                                }
+                                                else if ( !string.IsNullOrWhiteSpace( item.WeaponPrefabPath ) )
+                                                {
+                                                    <Button Text="Buy"
+                                                            class="menu-action primary shop-buy"
+                                                            Disabled="@(!CanBuyWeapon( item ))"
+                                                            @onclick="@(() => BuyWeapon( item ))" />
                                                 }
                                                 else
                                                 {
@@ -417,18 +423,20 @@
 
     sealed class ShopItem
     {
-        public ShopItem( string name, int price, string description, string printerDefinitionPath = null )
+        public ShopItem( string name, int price, string description, string printerDefinitionPath = null, string weaponPrefabPath = null )
         {
             Name = name;
             Price = price;
             Description = description;
             PrinterDefinitionPath = printerDefinitionPath;
+            WeaponPrefabPath = weaponPrefabPath;
         }
 
         public string Name { get; }
         public int Price { get; }
         public string Description { get; }
         public string PrinterDefinitionPath { get; }
+        public string WeaponPrefabPath { get; }
     }
 
     static readonly QuickAction[] QuickActions =
@@ -451,27 +459,6 @@
         new JobPlaceholder( "Medic", "Services", 60, "3 slots", "/medic", "Heal injured players and provide mobile support in active scenes." ),
         new JobPlaceholder( "Cook", "Services", 40, "2 slots", "/cook", "Prepare and sell food to keep the city supplied." ),
         new JobPlaceholder( "Hobo", "Civilian", 0, "2 slots", "/hobo", "Survive with almost nothing and lean into street-level roleplay." )
-    };
-
-    static readonly ShopItem[] ShipmentItems =
-    {
-        new ShopItem( "Pistol Shipment", 2200, "Starter weapon crate placeholder for sidearms." ),
-        new ShopItem( "SMG Shipment", 4800, "Mid-tier automatic shipment placeholder." ),
-        new ShopItem( "Rifle Shipment", 7200, "High-end firearm shipment placeholder." )
-    };
-
-    static readonly ShopItem[] WeaponItems =
-    {
-        new ShopItem( "Lockpick", 150, "Entry tool placeholder for criminal utility." ),
-        new ShopItem( "Medkit", 400, "Support item placeholder for healing loadouts." ),
-        new ShopItem( "Armor Plate", 600, "Defensive equipment placeholder." )
-    };
-
-    static readonly ShopItem[] AmmoItems =
-    {
-        new ShopItem( "Pistol Ammo", 60, "Small caliber ammo placeholder." ),
-        new ShopItem( "Buckshot Box", 90, "Shotgun shell refill placeholder." ),
-        new ShopItem( "Rifle Ammo", 120, "Rifle caliber refill placeholder." )
     };
 
     ScoreboardPage _currentPage = ScoreboardPage.Players;
@@ -557,6 +544,12 @@
             && LocalOwnedPrinterCount < MoneyPrinterDefinition.MaxOwnedPerPlayer;
     }
 
+    bool CanBuyWeapon( ShopItem item )
+    {
+        return !string.IsNullOrWhiteSpace( item.WeaponPrefabPath )
+            && LocalPlayer?.CanAfford( item.Price ) == true;
+    }
+
     string GetPrinterRateText( ShopItem item )
     {
         if ( string.IsNullOrWhiteSpace( item.PrinterDefinitionPath ) )
@@ -577,6 +570,14 @@
         LocalPlayer?.RequestBuyPrinter( item.PrinterDefinitionPath );
     }
 
+    void BuyWeapon( ShopItem item )
+    {
+        if ( string.IsNullOrWhiteSpace( item.WeaponPrefabPath ) )
+            return;
+
+        LocalPlayer?.RequestBuyWeapon( item.WeaponPrefabPath );
+    }
+
     ShopSection[] BuildShopSections()
     {
         return
@@ -589,19 +590,11 @@
                     .ToArray()
             ),
             new ShopSection(
-                "Shipments",
-                "Bundled gear purchases with the classic DarkRP structure.",
-                ShipmentItems
-            ),
-            new ShopSection(
                 "Weapons",
-                "Single-item utility purchases that normally sit beside shipments.",
-                WeaponItems
-            ),
-            new ShopSection(
-                "Ammo",
-                "Resupply blocks for the later weapon-system integration.",
-                AmmoItems
+                "Sandbox weapons available for individual purchase.",
+                WeaponShopCatalog.GetAll()
+                    .Select( x => new ShopItem( x.Title, x.Price, x.Description, weaponPrefabPath: x.PrefabPath ) )
+                    .ToArray()
             )
         ];
     }
