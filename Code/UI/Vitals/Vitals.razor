@@ -7,17 +7,30 @@
     return;
 
 <root>
-    <div class="vitals">
-        @if ( Player.Armour > 0 )
-        {
-            <div class="stat armour hud-panel">
-                <Image class="icon" Texture=@ArmourIcon />
-                <label class="value">@(ArmourPercent)</label>
+    <div class="player-card hud-panel">
+        <div class="identity">
+            <label class="name">@Player.DisplayName</label>
+            <label class="job">@JobTitle</label>
+        </div>
+
+        <div class="stats">
+            <div class="stat health">
+                <Image class="icon" Texture=@HealthIcon />
+                <label class="value">@HealthPercent</label>
             </div>
-        }
-        <div class="stat health hud-panel">
-            <Image class="icon" Texture=@HealthIcon />
-            <label class="value">@(HealthPercent)</label>
+
+            <div class="stat money">
+                <label class="icon money-icon">$</label>
+                <label class="value">@MoneyDisplay</label>
+            </div>
+
+            @if ( Player.Armour > 0 )
+            {
+                <div class="stat armour">
+                    <Image class="icon" Texture=@ArmourIcon />
+                    <label class="value">@ArmourPercent</label>
+                </div>
+            }
         </div>
     </div>
 
@@ -43,8 +56,10 @@
     Player Player => Player.FindLocalPlayer();
     BaseWeapon Weapon => Player?.GetComponent<PlayerInventory>()?.ActiveWeapon as BaseWeapon;
 
-    int HealthPercent => (int)(Player.Health / Player.MaxHealth * 100);
-    int ArmourPercent => (int)(Player.Armour / Player.MaxArmour * 100);
+    int HealthPercent => (int)(Player.Health / Math.Max( Player.MaxHealth, 1.0f ) * 100);
+    int ArmourPercent => (int)(Player.Armour / Math.Max( Player.MaxArmour, 1.0f ) * 100);
+    string MoneyDisplay => $"{Player.Money:n0}";
+    string JobTitle => string.IsNullOrWhiteSpace( Player.JobTitle ) ? "Citizen" : Player.JobTitle;
 
     bool IsSpawnMenuOpen()
     {
@@ -61,6 +76,6 @@
     {
         if ( !Player.IsValid() || Player.WantsHideHud ) return 0;
 
-        return System.HashCode.Combine( Player.Health, Player.Armour, Weapon?.ClipContents, Weapon?.ReserveAmmo );
+        return System.HashCode.Combine( Player.Health, Player.Armour, Player.Money, Player.JobTitle, Weapon?.ClipContents, Weapon?.ReserveAmmo );
     }
 }
