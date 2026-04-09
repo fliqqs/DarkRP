@@ -18,3 +18,5 @@ This project is a fork of the official Facepunch Sandbox gamemode. Its goal is t
 - Keep game logic deterministic and easy to reason about.
 - Validate client input on the server side.
 - Put security, correctness, and maintainability before convenience.
+- Always preserve a clear folder hierarchy and a consistent naming convention across code, UI, assets, and prefabs.
+- Prefer simple, predictable names that match the responsibility of the file or object, and avoid unnecessary prefixes, duplicates, or inconsistent casing.
