@@ -8,6 +8,7 @@ This project is a fork of the official Facepunch Sandbox gamemode. Its goal is t
 - Write readable, simple, and maintainable code.
 - Follow best coding practices consistently.
 - Stay direct and avoid unnecessary context or overengineering.
+- Reuse existing Sandbox gamemode features whenever possible. Do not reimplement built-in systems without a clear justification.
 - Never trust the client. The server is authoritative.
 
 ## Implementation Rules
