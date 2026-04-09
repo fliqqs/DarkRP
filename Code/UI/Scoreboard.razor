@@ -1,4 +1,4 @@
-﻿@using Sandbox;
+@using Sandbox;
 @using Sandbox.UI;
 @inherits PanelComponent
 
@@ -13,21 +13,174 @@
             }
         </div>
 
-        <div class="table">
-            <div class="col">
-                <div class="header row">
-                    <div class="avatar-spacer"></div>
-                    <div class="name"></div>
-                    <div class="stat">Kills</div>
-                    <div class="stat">Deaths</div>
-                    <div class="stat">Ping</div>
-                    <div class="mute-spacer"></div>
+        <div class="menu">
+            <div class="tabs menu-segmented-group">
+                @foreach ( var item in NavigationItems )
+                {
+                    <div class="menu-mode-button section-button @(_currentPage == item.Page ? "active" : "")"
+                         @onmouseover="@(() => OnSectionHover( item.Page ))"
+                         @onmouseleave="@(() => _hoveredPage = null)"
+                         @onclick="@(() => SelectPage( item.Page ))">
+                        <div class="title">@item.Title</div>
+                    </div>
+                }
+            </div>
+
+            <div class="page-container">
+                <div class="page-root @(_currentPage == ScoreboardPage.Dashboard ? "active" : "hidden")">
+                    <SpawnMenuContent>
+                        <Body>
+                            <div class="page-center">
+                                <div class="dashboard-layout">
+                                    <div class="dashboard-left menuinner">
+                                        <h1>Session</h1>
+
+                                        <div class="info-row">
+                                            <label class="key">Name</label>
+                                            <label class="value">@LocalPlayerName</label>
+                                        </div>
+
+                                        <div class="info-row">
+                                            <label class="key">Current Job</label>
+                                            <label class="value">Citizen</label>
+                                        </div>
+
+                                        <div class="info-row">
+                                            <label class="key">Wallet</label>
+                                            <label class="value">@FormatCurrency( 2500 )</label>
+                                        </div>
+
+                                        <div class="info-row">
+                                            <label class="key">Salary</label>
+                                            <label class="value">@FormatCurrency( 45 )</label>
+                                        </div>
+
+                                        <div class="info-row">
+                                            <label class="key">Server</label>
+                                            <label class="value">@SessionType</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="dashboard-right menuinner">
+                                        <h1>Quick Access</h1>
+
+                                        @foreach ( var action in QuickActions )
+                                        {
+                                            <div class="action-row">
+                                                <div class="action-copy">
+                                                    <label class="action-title">@action.Title</label>
+                                                    <label class="action-description">@action.Description</label>
+                                                </div>
+
+                                                <label class="placeholder-tag">Placeholder</label>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </Body>
+                    </SpawnMenuContent>
                 </div>
 
-                @foreach ( var entry in Scene.GetAll<PlayerData>().OrderByDescending( x => x.Kills ).ThenBy( x => x.DisplayName ) )
-                {
-                    <ScoreboardRow Entry="@entry" />
-                }
+                <div class="page-root @(_currentPage == ScoreboardPage.Players ? "active" : "hidden")">
+                    <SpawnMenuContent>
+                        <Body>
+                            <div class="page-center">
+                                <div class="table">
+                                    <div class="col">
+                                        <div class="header row">
+                                            <div class="avatar-spacer"></div>
+                                            <div class="name">Player</div>
+                                            <div class="stat">Kills</div>
+                                            <div class="stat">Deaths</div>
+                                            <div class="stat">Ping</div>
+                                            <div class="mute-spacer"></div>
+                                        </div>
+
+                                        @foreach ( var entry in GetPlayers() )
+                                        {
+                                            <ScoreboardRow Entry="@entry" />
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </Body>
+                    </SpawnMenuContent>
+                </div>
+
+                <div class="page-root @(_currentPage == ScoreboardPage.Jobs ? "active" : "hidden")">
+                    <SpawnMenuContent>
+                        <Body>
+                            <div class="page-center">
+                                <div class="jobs-list">
+                                    @foreach ( var job in JobPlaceholders )
+                                    {
+                                        <div class="job-entry">
+                                            <div class="job-main">
+                                                <div class="job-topline">
+                                                    <label class="job-name">@job.Name</label>
+                                                    <label class="job-category">@job.Category</label>
+                                                </div>
+
+                                                <label class="job-description">@job.Description</label>
+                                            </div>
+
+                                            <div class="job-meta">
+                                                <label class="job-meta-item">Salary: @FormatCurrency( job.Salary )</label>
+                                                <label class="job-meta-item">Slots: @job.Slots</label>
+                                                <label class="job-meta-item">Cmd: @job.Command</label>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </Body>
+                    </SpawnMenuContent>
+                </div>
+
+                <div class="page-root @(_currentPage == ScoreboardPage.Shop ? "active" : "hidden")">
+                    <SpawnMenuPage>
+                        <Left>
+                            <div class="shop-categories menuinner">
+                                <h1>Categories</h1>
+
+                                <div class="shop-category-list">
+                                    @foreach ( var shopSection in ShopSections )
+                                    {
+                                        <div class="shop-category-option @(_selectedShopSection == shopSection.Title ? "active" : "")"
+                                             @onclick="@(() => SelectShopSection( shopSection.Title ))">
+                                            <label>@shopSection.Title</label>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </Left>
+
+                        <Body>
+                            <div class="shop-body menuinner">
+                                <h1>@CurrentShopSection.Title</h1>
+                                <label class="shop-description-header">@CurrentShopSection.Description</label>
+
+                                <div class="shop-list">
+                                    @foreach ( var item in CurrentShopSection.Items )
+                                    {
+                                        <div class="shop-entry">
+                                            <div class="shop-copy">
+                                                <label class="shop-name">@item.Name</label>
+                                                <label class="shop-description">@item.Description</label>
+                                            </div>
+
+                                            <div class="shop-meta">
+                                                <label class="shop-price">@FormatCurrency( item.Price )</label>
+                                                <label class="placeholder-tag">Placeholder</label>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </Body>
+                    </SpawnMenuPage>
+                </div>
             </div>
         </div>
     </div>
@@ -35,13 +188,207 @@
 
 @code
 {
+    enum ScoreboardPage
+    {
+        Dashboard,
+        Players,
+        Jobs,
+        Shop
+    }
+
+    sealed class NavigationItem
+    {
+        public NavigationItem( ScoreboardPage page, string title )
+        {
+            Page = page;
+            Title = title;
+        }
+
+        public ScoreboardPage Page { get; }
+        public string Title { get; }
+    }
+
+    sealed class QuickAction
+    {
+        public QuickAction( string title, string description )
+        {
+            Title = title;
+            Description = description;
+        }
+
+        public string Title { get; }
+        public string Description { get; }
+    }
+
+    sealed class JobPlaceholder
+    {
+        public JobPlaceholder( string name, string category, int salary, string slots, string command, string description )
+        {
+            Name = name;
+            Category = category;
+            Salary = salary;
+            Slots = slots;
+            Command = command;
+            Description = description;
+        }
+
+        public string Name { get; }
+        public string Category { get; }
+        public int Salary { get; }
+        public string Slots { get; }
+        public string Command { get; }
+        public string Description { get; }
+    }
+
+    sealed class ShopSection
+    {
+        public ShopSection( string title, string description, ShopItem[] items )
+        {
+            Title = title;
+            Description = description;
+            Items = items;
+        }
+
+        public string Title { get; }
+        public string Description { get; }
+        public ShopItem[] Items { get; }
+    }
+
+    sealed class ShopItem
+    {
+        public ShopItem( string name, int price, string description )
+        {
+            Name = name;
+            Price = price;
+            Description = description;
+        }
+
+        public string Name { get; }
+        public int Price { get; }
+        public string Description { get; }
+    }
+
+    static readonly NavigationItem[] NavigationItems =
+    {
+        new NavigationItem( ScoreboardPage.Dashboard, "Dashboard" ),
+        new NavigationItem( ScoreboardPage.Players, "Players" ),
+        new NavigationItem( ScoreboardPage.Jobs, "Jobs" ),
+        new NavigationItem( ScoreboardPage.Shop, "Shop" )
+    };
+
+    static readonly QuickAction[] QuickActions =
+    {
+        new QuickAction( "Change Job", "Reserved slot for the future job-selection flow." ),
+        new QuickAction( "Open Shop", "Reserved slot for entity and shipment purchasing." ),
+        new QuickAction( "Request License", "Reserved slot for mayor and police interactions." ),
+        new QuickAction( "View Laws", "Reserved slot for city laws and server rules." )
+    };
+
+    static readonly JobPlaceholder[] JobPlaceholders =
+    {
+        new JobPlaceholder( "Citizen", "Civilian", 45, "Unlimited", "/citizen", "Default city resident with access to the standard roleplay loop." ),
+        new JobPlaceholder( "Civil Protection", "Government", 65, "4 slots", "/cp", "Patrol the streets, respond to crimes and protect the mayor." ),
+        new JobPlaceholder( "Police Chief", "Government", 90, "1 slot", "/chief", "Lead the police force and coordinate raids or lockdowns." ),
+        new JobPlaceholder( "Mayor", "Government", 110, "1 slot", "/mayor", "Run the city, define laws and direct the public order response." ),
+        new JobPlaceholder( "Gangster", "Criminal", 55, "4 slots", "/gangster", "Work the underground economy and support the mob boss." ),
+        new JobPlaceholder( "Mob Boss", "Criminal", 85, "1 slot", "/mobboss", "Lead organized crime and coordinate the gangster team." ),
+        new JobPlaceholder( "Gun Dealer", "Commerce", 70, "2 slots", "/gundealer", "Provide weapons, ammo and contraband to paying customers." ),
+        new JobPlaceholder( "Medic", "Services", 60, "3 slots", "/medic", "Heal injured players and provide mobile support in active scenes." ),
+        new JobPlaceholder( "Cook", "Services", 40, "2 slots", "/cook", "Prepare and sell food to keep the city supplied." ),
+        new JobPlaceholder( "Hobo", "Civilian", 0, "2 slots", "/hobo", "Survive with almost nothing and lean into street-level roleplay." )
+    };
+
+    static readonly ShopSection[] ShopSections =
+    {
+        new ShopSection(
+            "Entities",
+            "Placeholder machines and deployables for the future DarkRP economy.",
+            new[]
+            {
+                new ShopItem( "Money Printer", 1250, "Passive cash generator placeholder with no gameplay hook yet." ),
+                new ShopItem( "Drug Lab", 900, "Production entity placeholder for contraband or chemistry gameplay." ),
+                new ShopItem( "Microwave", 350, "Support prop placeholder for food or consumable crafting." )
+            }
+        ),
+        new ShopSection(
+            "Shipments",
+            "Bundled gear purchases with the classic DarkRP structure.",
+            new[]
+            {
+                new ShopItem( "Pistol Shipment", 2200, "Starter weapon crate placeholder for sidearms." ),
+                new ShopItem( "SMG Shipment", 4800, "Mid-tier automatic shipment placeholder." ),
+                new ShopItem( "Rifle Shipment", 7200, "High-end firearm shipment placeholder." )
+            }
+        ),
+        new ShopSection(
+            "Weapons",
+            "Single-item utility purchases that normally sit beside shipments.",
+            new[]
+            {
+                new ShopItem( "Lockpick", 150, "Entry tool placeholder for criminal utility." ),
+                new ShopItem( "Medkit", 400, "Support item placeholder for healing loadouts." ),
+                new ShopItem( "Armor Plate", 600, "Defensive equipment placeholder." )
+            }
+        ),
+        new ShopSection(
+            "Ammo",
+            "Resupply blocks for the later weapon-system integration.",
+            new[]
+            {
+                new ShopItem( "Pistol Ammo", 60, "Small caliber ammo placeholder." ),
+                new ShopItem( "Buckshot Box", 90, "Shotgun shell refill placeholder." ),
+                new ShopItem( "Rifle Ammo", 120, "Rifle caliber refill placeholder." )
+            }
+        )
+    };
+
+    ScoreboardPage _currentPage = ScoreboardPage.Players;
+    ScoreboardPage? _hoveredPage;
     string _mapTitle = null;
+    string _selectedShopSection = "Entities";
+
+    int PlayerCount => Scene.GetAll<PlayerData>().Count();
+
+    string LocalPlayerName
+        => Scene.GetAll<PlayerData>().FirstOrDefault( x => x.IsMe )?.DisplayName ?? "Current Player";
+
+    string SessionType => Networking.IsHost ? "Host" : "Client";
+
+    ShopSection CurrentShopSection
+        => ShopSections.FirstOrDefault( x => x.Title == _selectedShopSection ) ?? ShopSections.First();
 
     protected override void OnTreeFirstBuilt()
     {
         base.OnTreeFirstBuilt();
         FetchMap();
     }
+
+    void SelectPage( ScoreboardPage page )
+    {
+        _currentPage = page;
+    }
+
+    void OnSectionHover( ScoreboardPage page )
+    {
+        if ( _hoveredPage == page ) return;
+
+        _hoveredPage = page;
+        Sound.Play( "sounds/kenney/ui/ui.button.over.sound" );
+    }
+
+    void SelectShopSection( string name )
+    {
+        _selectedShopSection = name;
+    }
+
+    IEnumerable<PlayerData> GetPlayers()
+    {
+        return Scene.GetAll<PlayerData>()
+            .OrderByDescending( x => x.Kills )
+            .ThenBy( x => x.DisplayName );
+    }
+
+    string FormatCurrency( int amount ) => $"${amount:n0}";
 
     async void FetchMap()
     {
@@ -56,17 +403,15 @@
 
     protected override void OnUpdate()
     {
-	    var host = Game.ActiveScene.Get<SpawnMenuHost>();
-	    if ( host?.Panel?.HasClass( "open" ) ?? false )
-	    {
-		    Input.Clear( "Score" );
-	    }
+        var host = Game.ActiveScene.Get<SpawnMenuHost>();
+        if ( host?.Panel?.HasClass( "open" ) ?? false )
+        {
+            Input.Clear( "Score" );
+        }
 
-	    SetClass( "visible", Input.Down( "Score" ) );
+        SetClass( "visible", Input.Down( "Score" ) );
     }
 
-    /// <summary>
-    /// update every second
-    /// </summary>
-    protected override int BuildHash() => System.HashCode.Combine( RealTime.Now.CeilToInt() );
+    protected override int BuildHash()
+        => System.HashCode.Combine( RealTime.Now.CeilToInt(), _currentPage, _selectedShopSection );
 }
