@@ -191,7 +191,20 @@
 
                                             <div class="shop-meta">
                                                 <label class="shop-price">@FormatCurrency( item.Price )</label>
-                                                <label class="placeholder-tag">Placeholder</label>
+                                                @if ( item.PrinterType is not null )
+                                                {
+                                                    <label class="shop-meta-item">@GetPrinterRateText( item )</label>
+                                                    <label class="shop-meta-item">Owned: @LocalOwnedPrinterCount / @MoneyPrinterCatalog.MaxOwnedPerPlayer</label>
+                                                    <Button Text="Buy"
+                                                            Icon="$"
+                                                            class="menu-action primary shop-buy"
+                                                            Disabled="@(!CanBuyPrinter( item ))"
+                                                            @onclick="@(() => BuyPrinter( item ))" />
+                                                }
+                                                else
+                                                {
+                                                    <label class="placeholder-tag">Placeholder</label>
+                                                }
                                             </div>
                                         </div>
                                     }
@@ -275,16 +288,18 @@
 
     sealed class ShopItem
     {
-        public ShopItem( string name, int price, string description )
+        public ShopItem( string name, int price, string description, MoneyPrinterType? printerType = null )
         {
             Name = name;
             Price = price;
             Description = description;
+            PrinterType = printerType;
         }
 
         public string Name { get; }
         public int Price { get; }
         public string Description { get; }
+        public MoneyPrinterType? PrinterType { get; }
     }
 
     static readonly NavigationItem[] NavigationItems =
@@ -320,14 +335,11 @@
     static readonly ShopSection[] ShopSections =
     {
         new ShopSection(
-            "Entities",
-            "Placeholder machines and deployables for the future DarkRP economy.",
-            new[]
-            {
-                new ShopItem( "Money Printer", 1250, "Passive cash generator placeholder with no gameplay hook yet." ),
-                new ShopItem( "Drug Lab", 900, "Production entity placeholder for contraband or chemistry gameplay." ),
-                new ShopItem( "Microwave", 350, "Support prop placeholder for food or consumable crafting." )
-            }
+            "Printers",
+            "Purchase money printers with server-authoritative placement and generation.",
+            MoneyPrinterCatalog.All
+                .Select( x => new ShopItem( x.Title, x.Price, x.Description, x.Type ) )
+                .ToArray()
         ),
         new ShopSection(
             "Shipments",
@@ -364,7 +376,7 @@
     ScoreboardPage _currentPage = ScoreboardPage.Players;
     ScoreboardPage? _hoveredPage;
     string _mapTitle = null;
-    string _selectedShopSection = "Entities";
+    string _selectedShopSection = "Printers";
     string _dropMoneyValue = "";
     bool _isOpen;
     MoneyDropEntry DropMoneyEntry = default;
@@ -372,6 +384,7 @@
     int PlayerCount => Scene.GetAll<PlayerData>().Count();
     Player LocalPlayer => Player.FindLocalPlayer();
     int LocalPlayerMoney => LocalPlayer?.Money ?? 0;
+    int LocalOwnedPrinterCount => MoneyPrinter.CountOwned( Connection.Local );
     string LocalPlayerJob => string.IsNullOrWhiteSpace( LocalPlayer?.JobTitle ) ? "Citizen" : LocalPlayer.JobTitle;
     bool CanDropMoney => TryGetDropMoneyAmount( out var amount ) && LocalPlayer?.CanAfford( amount ) == true;
 
@@ -405,6 +418,30 @@
     void SelectShopSection( string name )
     {
         _selectedShopSection = name;
+    }
+
+    bool CanBuyPrinter( ShopItem item )
+    {
+        return item.PrinterType is not null
+            && LocalPlayer?.CanAfford( item.Price ) == true
+            && LocalOwnedPrinterCount < MoneyPrinterCatalog.MaxOwnedPerPlayer;
+    }
+
+    string GetPrinterRateText( ShopItem item )
+    {
+        if ( item.PrinterType is not MoneyPrinterType type )
+            return string.Empty;
+
+        var definition = MoneyPrinterCatalog.Get( type );
+        return $"{FormatCurrency( definition.MoneyPerTick )} / {definition.Interval:0}s";
+    }
+
+    void BuyPrinter( ShopItem item )
+    {
+        if ( item.PrinterType is not MoneyPrinterType type )
+            return;
+
+        LocalPlayer?.RequestBuyPrinter( type );
     }
 
     IEnumerable<PlayerData> GetPlayers()
@@ -481,5 +518,5 @@
     }
 
     protected override int BuildHash()
-        => System.HashCode.Combine( PlayerCount, LocalPlayerMoney, LocalPlayerJob, _currentPage, _selectedShopSection, _dropMoneyValue );
+        => System.HashCode.Combine( PlayerCount, LocalPlayerMoney, LocalOwnedPrinterCount, LocalPlayerJob, _currentPage, _selectedShopSection, _dropMoneyValue );
 }
