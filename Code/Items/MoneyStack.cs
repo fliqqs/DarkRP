@@ -1,4 +1,4 @@
-public sealed class MoneyStack : Component, Component.IPressable
+public sealed class MoneyStack : Component, Component.IPressable, IPhysgunEvent
 {
 	public const string PrefabPath = "entities/money/money_stack.prefab";
 	List<TextRenderer> Labels = new();
@@ -15,6 +15,14 @@ public sealed class MoneyStack : Component, Component.IPressable
 	}
 
 	bool IPressable.CanPress( IPressable.Event e ) => Amount > 0;
+
+	void IPhysgunEvent.OnPhysgunGrab( IPhysgunEvent.GrabEvent e )
+	{
+		if ( !e.Pulling )
+		{
+			e.Cancelled = true;
+		}
+	}
 
 	bool IPressable.Press( IPressable.Event e )
 	{

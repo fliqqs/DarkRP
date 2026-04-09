@@ -1,6 +1,6 @@
 using Sandbox.UI;
 
-public sealed class MoneyPrinter : Component, Component.IPressable
+public sealed class MoneyPrinter : Component, Component.IPressable, IPhysgunEvent
 {
 	const string BaseMaterialPath = "materials/printer/base/base.vmat";
 	const string FanMaterialPath = "materials/printer/fan/fan.vmat";
@@ -31,6 +31,14 @@ public sealed class MoneyPrinter : Component, Component.IPressable
 	}
 
 	bool IPressable.CanPress( IPressable.Event e ) => StoredMoney > 0;
+
+	void IPhysgunEvent.OnPhysgunGrab( IPhysgunEvent.GrabEvent e )
+	{
+		if ( !e.Pulling )
+		{
+			e.Cancelled = true;
+		}
+	}
 
 	bool IPressable.Press( IPressable.Event e )
 	{

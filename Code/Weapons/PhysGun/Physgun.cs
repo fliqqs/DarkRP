@@ -425,7 +425,11 @@ public partial class Physgun
 		if ( !go.IsValid() || go.IsDestroyed ) return false;
 
 		// Ask the object if it allows being grabbed (Ownable and others can reject via IPhysgunEvent)
-		var grabEvent = new IPhysgunEvent.GrabEvent { Grabber = Network.Owner };
+		var grabEvent = new IPhysgunEvent.GrabEvent
+		{
+			Grabber = Network.Owner,
+			Pulling = isPulling
+		};
 		go.Root.RunEvent<IPhysgunEvent>( x => x.OnPhysgunGrab( grabEvent ) );
 		if ( grabEvent.Cancelled ) return false;
 

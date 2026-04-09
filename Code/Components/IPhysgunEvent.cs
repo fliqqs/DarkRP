@@ -8,6 +8,12 @@ public interface IPhysgunEvent : ISceneEvent<IPhysgunEvent>
 		public Connection Grabber { get; init; }
 
 		/// <summary>
+		/// True when the right-click pull mode is being used.
+		/// False when the left-click hold mode is being used.
+		/// </summary>
+		public bool Pulling { get; init; }
+
+		/// <summary>
 		/// Set to true to cancel the grab.
 		/// </summary>
 		public bool Cancelled { get; set; }
