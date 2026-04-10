@@ -619,7 +619,7 @@
           "RenderTexture": null,
           "TargetEye": "None",
           "Viewport": "0,0,1,1",
-          "ZFar": 32000,
+          "ZFar": 5000,
           "ZNear": 1
         },
         {
@@ -641,42 +641,42 @@
           "Flags": 0,
           "__version": 3,
           "AutoExposureEnabled": true,
-          "ExposureCompensation": 0,
-          "ExposureMethod": "Luminance",
-          "MaximumExposure": 3,
+          "ExposureCompensation": 1,
+          "ExposureMethod": "RGB",
+          "MaximumExposure": 2,
           "MinimumExposure": 1,
-          "Mode": "AgX",
+          "Mode": "HableFilmic",
           "OnComponentDestroy": null,
           "OnComponentDisabled": null,
           "OnComponentEnabled": null,
           "OnComponentFixedUpdate": null,
           "OnComponentStart": null,
           "OnComponentUpdate": null,
-          "Rate": 2
+          "Rate": 1
         },
         {
           "__type": "Sandbox.Bloom",
           "__guid": "9cf19b34-2b2b-4328-b1e4-cb0a69c18988",
-          "__enabled": true,
+          "__enabled": false,
           "Flags": 0,
           "__version": 1,
           "Filter": "Bilinear",
           "Gamma": 2.2,
-          "Mode": "Screen",
+          "Mode": "Additive",
           "OnComponentDestroy": null,
           "OnComponentDisabled": null,
           "OnComponentEnabled": null,
           "OnComponentFixedUpdate": null,
           "OnComponentStart": null,
           "OnComponentUpdate": null,
-          "Strength": 1.5,
-          "Threshold": 1.8598726,
+          "Strength": 0.2,
+          "Threshold": 1.25,
           "Tint": "1,1,1,1"
         },
         {
           "__type": "Sandbox.Vignette",
           "__guid": "93d41975-e8b1-4f98-a867-82c456cc5eb6",
-          "__enabled": true,
+          "__enabled": false,
           "Flags": 0,
           "Center": "0.5,0.5",
           "Color": "0,0,0,1",
@@ -693,7 +693,7 @@
         {
           "__type": "Sandbox.AmbientOcclusion",
           "__guid": "3d41823e-92f0-471a-b80b-c1ec3da0704c",
-          "__enabled": true,
+          "__enabled": false,
           "Flags": 0,
           "__version": 1,
           "DenoiseMode": "Spatial",
@@ -723,7 +723,7 @@
         {
           "__type": "Sandbox.ScreenSpaceReflections",
           "__guid": "bcb99eb5-8b38-4d97-b54c-547da06c3032",
-          "__enabled": true,
+          "__enabled": false,
           "Flags": 0,
           "OnComponentDestroy": null,
           "OnComponentDisabled": null,
@@ -747,7 +747,7 @@
           "OnComponentFixedUpdate": null,
           "OnComponentStart": null,
           "OnComponentUpdate": null,
-          "Saturation": 1.1
+          "Saturation": 1
         }
       ],
       "Children": []
@@ -777,7 +777,7 @@
       },
       "Sandbox.Clutter.ClutterGridSystem": {
         "Storage": {
-          "$blob": "b4480286-f726-43b5-928b-af01786f9788"
+          "$blob": "cc667bc6-32e3-4c10-a433-28cb2968a828"
         }
       }
     }
