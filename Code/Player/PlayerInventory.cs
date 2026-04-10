@@ -58,6 +58,15 @@ public sealed class PlayerInventory : Component, IPlayerEvent, ISaveEvents
 
 	public void GiveDefaultWeapons()
 	{
+		var handSlot = FindEmptySlot();
+		if ( handSlot >= 0 && Pickup( "weapons/hand/hand.prefab", handSlot, false ) )
+		{
+			if ( GetSlot( handSlot ) is { } hand )
+			{
+				hand.IsJobLocked = true;
+			}
+		}
+
 		var physgunSlot = FindEmptySlot();
 		if ( physgunSlot >= 0 && Pickup( "weapons/physgun/physgun.prefab", physgunSlot, false ) )
 		{
@@ -621,7 +630,7 @@ public sealed class PlayerInventory : Component, IPlayerEvent, ISaveEvents
 	}
 
 	/// <summary>
-	/// Clears the inventory and restores the default weapons (physgun, toolgun, camera).
+	/// Clears the inventory and restores the default weapons (hands, physgun, toolgun, camera).
 	/// </summary>
 	public void ResetToDefault()
 	{
