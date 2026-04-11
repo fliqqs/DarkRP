@@ -4,6 +4,8 @@ DarkRP is an open-source project aimed at recreating the DarkRP experience in S&
 It is based on a fork of the official Sandbox mode, meaning it behaves very similarly to Garry’s Mod: you can use standard Sandbox entities, with a roleplay layer built on top.
 I don’t plan to maintain this project indefinitely, but my goal is to create a clean, solid, and reusable foundation.
 
+You can try it in-game here: https://sbox.game/sousoup/darkrp2
+
 ## Contributors
 
 Thanks to all current and future contributors for your time, ideas, and contributions to the project.
