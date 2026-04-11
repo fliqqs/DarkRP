@@ -77,6 +77,23 @@
                                                             @onclick="@DropMoney" />
                                                 </div>
                                             </div>
+
+                                            <div class="roleplay-name-panel">
+                                                <label class="money-drop-label">Set RP Name</label>
+                                                <div class="money-drop-controls">
+                                                    <TabTextEntry @ref="RoleplayNameEntry"
+                                                                  class="menu-input money-drop-input"
+                                                                  Placeholder="Roleplay name"
+                                                                  Value:bind=@_roleplayNameValue
+                                                                  OnTabPressed="@CloseFromRoleplayNameEntry"
+                                                                  @onsubmit="@SubmitRoleplayName" />
+                                                    <Button Text="Set"
+                                                            Icon="person"
+                                                            class="menu-action primary"
+                                                            Disabled="@(!CanSubmitRoleplayName)"
+                                                            @onclick="@SubmitRoleplayName" />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -474,10 +491,12 @@
     string _mapTitle = null;
     string _selectedShopSection = "Printers";
     string _dropMoneyValue = "";
+    string _roleplayNameValue = "";
     string _adminSteamIdValue = "";
     bool _isOpen;
     static Panel _currentMenuOverlay;
     MoneyDropEntry DropMoneyEntry = default;
+    TabTextEntry RoleplayNameEntry = default;
     TabTextEntry AdminSteamIdEntry = default;
     Panel MenuOverlay = default;
     int PlayerCount => Scene.GetAll<PlayerData>().Count();
@@ -487,6 +506,7 @@
     int LocalOwnedPrinterCount => MoneyPrinter.CountOwned( Connection.Local );
     string LocalPlayerJob => string.IsNullOrWhiteSpace( LocalPlayer?.JobTitle ) ? "Citizen" : LocalPlayer.JobTitle;
     bool CanDropMoney => TryGetDropMoneyAmount( out var amount ) && LocalPlayer?.CanAfford( amount ) == true;
+    bool CanSubmitRoleplayName => TryGetRoleplayName( out var roleplayName ) && !string.Equals( LocalPlayerName, roleplayName, StringComparison.Ordinal );
     bool CanAccessAdministration => LocalPlayer?.HasAdminAccess == true;
     bool CanManageAdminRoles => LocalPlayer?.HasSuperAdminAccess == true;
     bool CanSubmitAdminSteamId => TryGetAdminSteamId( out _ );
@@ -786,6 +806,12 @@
         return int.TryParse( _dropMoneyValue, out amount ) && amount > 0;
     }
 
+    bool TryGetRoleplayName( out string roleplayName )
+    {
+        roleplayName = string.Join( " ", (_roleplayNameValue ?? string.Empty).Trim().Split( ' ', StringSplitOptions.RemoveEmptyEntries ) );
+        return !string.IsNullOrWhiteSpace( roleplayName );
+    }
+
     bool TryGetAdminSteamId( out long steamId )
     {
         steamId = 0;
@@ -800,6 +826,16 @@
         LocalPlayer?.RequestDropMoney( amount );
         _dropMoneyValue = "";
         DropMoneyEntry?.Blur();
+    }
+
+    void SubmitRoleplayName()
+    {
+        if ( !TryGetRoleplayName( out var roleplayName ) )
+            return;
+
+        LocalPlayer?.RequestSetRoleplayName( roleplayName );
+        _roleplayNameValue = "";
+        RoleplayNameEntry?.Blur();
     }
 
     void SubmitAdminRole( AdminRole role )
@@ -822,11 +858,17 @@
         if ( !open )
         {
             DropMoneyEntry?.Blur();
+            RoleplayNameEntry?.Blur();
             AdminSteamIdEntry?.Blur();
         }
     }
 
     void CloseFromDropEntry()
+    {
+        SetOpen( false );
+    }
+
+    void CloseFromRoleplayNameEntry()
     {
         SetOpen( false );
     }
@@ -861,6 +903,7 @@
 
         Panel.AcceptsFocus = false;
         var dropMoneyHasFocus = DropMoneyEntry?.HasFocus ?? false;
+        var roleplayNameHasFocus = RoleplayNameEntry?.HasFocus ?? false;
         var adminSteamIdHasFocus = AdminSteamIdEntry?.HasFocus ?? false;
 
         var host = Game.ActiveScene.Get<SpawnMenuHost>();
@@ -875,7 +918,7 @@
             _currentPage = ScoreboardPage.Players;
         }
 
-        if ( (Input.Pressed( "Score" ) || Input.Keyboard.Pressed( "Tab" )) && !dropMoneyHasFocus && !adminSteamIdHasFocus )
+        if ( (Input.Pressed( "Score" ) || Input.Keyboard.Pressed( "Tab" )) && !dropMoneyHasFocus && !roleplayNameHasFocus && !adminSteamIdHasFocus )
         {
             SetOpen( !_isOpen );
         }
@@ -902,6 +945,7 @@
                 hash.Add( LocalPlayerSalary );
                 hash.Add( SessionType );
                 hash.Add( _dropMoneyValue );
+                hash.Add( _roleplayNameValue );
                 break;
 
             case ScoreboardPage.Players:

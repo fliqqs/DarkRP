@@ -2,6 +2,9 @@ using Sandbox.UI;
 
 public sealed partial class Player
 {
+	public const int MinRoleplayNameLength = 3;
+	public const int MaxRoleplayNameLength = 24;
+
 	[Property, Sync( SyncFlags.FromHost )]
 	public int Money { get; private set; } = 2500;
 
@@ -51,6 +54,99 @@ public sealed partial class Player
 		{
 			PlayerData.JobTitle = JobTitle;
 		}
+	}
+
+	public void SetRoleplayName( string roleplayName )
+	{
+		if ( !Networking.IsHost || !PlayerData.IsValid() )
+			return;
+
+		if ( !TryNormalizeRoleplayName( roleplayName, out var normalizedName, out _ ) )
+			return;
+
+		if ( string.Equals( PlayerData.DisplayName, normalizedName, StringComparison.Ordinal ) )
+			return;
+
+		PlayerData.DisplayName = normalizedName;
+		GameObject.Name = normalizedName;
+		SaveRoleplayData();
+	}
+
+	[Rpc.Host]
+	public void RequestSetRoleplayName( string roleplayName )
+	{
+		if ( Rpc.Caller != Network.Owner )
+			return;
+
+		if ( !TryNormalizeRoleplayName( roleplayName, out var normalizedName, out var error ) )
+		{
+			Notices.SendNotice( Network.Owner, "block", Color.Red, error, 3 );
+			return;
+		}
+
+		if ( string.Equals( PlayerData?.DisplayName, normalizedName, StringComparison.Ordinal ) )
+		{
+			Notices.SendNotice( Network.Owner, "person", Color.Yellow, "You're already using this RP name.", 3 );
+			return;
+		}
+
+		if ( IsRoleplayNameTaken( normalizedName ) )
+		{
+			Notices.SendNotice( Network.Owner, "block", Color.Red, "This RP name is already taken.", 3 );
+			return;
+		}
+
+		SetRoleplayName( normalizedName );
+		Notices.SendNotice( Network.Owner, "person", Color.Green, $"RP name updated to {normalizedName}.", 3 );
+	}
+
+	static bool TryNormalizeRoleplayName( string value, out string normalizedName, out string error )
+	{
+		normalizedName = null;
+		error = $"RP name must be {MinRoleplayNameLength}-{MaxRoleplayNameLength} characters.";
+
+		if ( string.IsNullOrWhiteSpace( value ) )
+			return false;
+
+		normalizedName = string.Join( " ", value.Trim().Split( ' ', StringSplitOptions.RemoveEmptyEntries ) );
+		if ( normalizedName.Length < MinRoleplayNameLength || normalizedName.Length > MaxRoleplayNameLength )
+			return false;
+
+		foreach ( var character in normalizedName )
+		{
+			if ( char.IsLetterOrDigit( character ) || character is ' ' or '-' or '_' or '\'' )
+				continue;
+
+			error = "RP name can only contain letters, numbers, spaces, apostrophes, '-' or '_'.";
+			normalizedName = null;
+			return false;
+		}
+
+		error = null;
+		return true;
+	}
+
+	bool IsRoleplayNameTaken( string normalizedName )
+	{
+		if ( string.IsNullOrWhiteSpace( normalizedName ) || Game.ActiveScene is null )
+			return false;
+
+		foreach ( var playerData in PlayerData.All )
+		{
+			if ( !playerData.IsValid() || playerData == PlayerData )
+				continue;
+
+			var existingName = NormalizeRoleplayNameSpacing( playerData.DisplayName );
+			if ( string.Equals( existingName, normalizedName, StringComparison.OrdinalIgnoreCase ) )
+				return true;
+		}
+
+		return false;
+	}
+
+	static string NormalizeRoleplayNameSpacing( string value )
+	{
+		return string.Join( " ", (value ?? string.Empty).Trim().Split( ' ', StringSplitOptions.RemoveEmptyEntries ) );
 	}
 
 	[Rpc.Host]

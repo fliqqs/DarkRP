@@ -14,6 +14,10 @@ public sealed partial class Player
 		try
 		{
 			Money = Math.Max( 0, data.Money );
+			if ( TryNormalizeRoleplayName( data.RoleplayName, out var roleplayName, out _ ) )
+			{
+				SetRoleplayName( roleplayName );
+			}
 		}
 		finally
 		{
@@ -35,7 +39,8 @@ public sealed partial class Player
 
 		PlayerRoleplayStorage.Save( SteamId, new PlayerRoleplaySaveData
 		{
-			Money = Money
+			Money = Money,
+			RoleplayName = PlayerData?.DisplayName
 		} );
 	}
 }

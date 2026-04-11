@@ -8,7 +8,7 @@ public sealed partial class PlayerData : Component, ISaveEvents
 	/// </summary>
 	[Property] public Guid PlayerId { get; set; }
 	[Property] public long SteamId { get; set; } = -1L;
-	[Property] public string DisplayName { get; set; }
+	[Property, Sync] public string DisplayName { get; set; }
 
 	[Sync] public int Kills { get; set; }
 	[Sync] public int Deaths { get; set; }

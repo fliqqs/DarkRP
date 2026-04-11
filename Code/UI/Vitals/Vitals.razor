@@ -76,6 +76,6 @@
     {
         if ( !Player.IsValid() || Player.WantsHideHud ) return 0;
 
-        return System.HashCode.Combine( Player.Health, Player.Armour, Player.Money, Player.JobTitle, Weapon?.ClipContents, Weapon?.ReserveAmmo );
+        return System.HashCode.Combine( Player.DisplayName, Player.Health, Player.Armour, Player.Money, Player.JobTitle, Weapon?.ClipContents, Weapon?.ReserveAmmo );
     }
 }

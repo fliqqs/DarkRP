@@ -263,10 +263,13 @@ Scoreboard {
 	.money-drop-wrap {
 		width: 100%;
 		padding-top: 12px;
-		justify-content: center;
+		flex-direction: column;
+		align-items: center;
+		gap: 10px;
 	}
 
-	.money-drop-panel {
+	.money-drop-panel,
+	.roleplay-name-panel {
 		width: 100%;
 		max-width: 250px;
 		flex-direction: column;
