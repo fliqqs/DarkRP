@@ -73,7 +73,7 @@ public sealed class Door : Component, Component.IPressable
 	[Property, Sync] public bool IsLocked { get; set; }
 
 	[Sync] private TimeSince LastUse { get; set; }
-	[Sync] private DoorState _state { get; set; }
+	[Sync] private DoorState _state { get; set; } = DoorState.Closed;
 
 	/// <summary>
 	/// Called when the door's state changes. When it opens, closed, is closing, etc..
@@ -121,11 +121,42 @@ public sealed class Door : Component, Component.IPressable
 
 	bool IPressable.CanPress( IPressable.Event e )
 	{
+		var roleplayDoor = GameObject.GetComponent<global::RoleplayDoor>();
+		if ( roleplayDoor.IsValid() )
+		{
+			return roleplayDoor.CanPress( e, State );
+		}
+
 		return State is DoorState.Open or DoorState.Closed;
+	}
+
+	IPressable.Tooltip? IPressable.GetTooltip( IPressable.Event e )
+	{
+		var roleplayDoor = GameObject.GetComponent<global::RoleplayDoor>();
+		if ( roleplayDoor.IsValid() )
+		{
+			var presserObject = e.Source?.GameObject;
+			var player = presserObject.IsValid() ? presserObject.Root.GetComponent<global::Player>() : null;
+			return roleplayDoor.BuildTooltip( player, State );
+		}
+
+		if ( IsLocked )
+		{
+			return new IPressable.Tooltip( "Locked", "lock", "" );
+		}
+
+		var title = State == DoorState.Open ? "Close" : "Open";
+		return new IPressable.Tooltip( title, "door_front", "" );
 	}
 
 	bool IPressable.Press( IPressable.Event e )
 	{
+		var roleplayDoor = GameObject.GetComponent<global::RoleplayDoor>();
+		if ( roleplayDoor.IsValid() )
+		{
+			return roleplayDoor.Press( e, State );
+		}
+
 		Toggle( e.Source.GameObject );
 		return true;
 	}
@@ -153,7 +184,7 @@ public sealed class Door : Component, Component.IPressable
 		State = DoorState.Opening;
 
 		if ( OpenSound is not null )
-		PlaySound( OpenSound );
+			PlaySound( OpenSound );
 
 		if ( OpenAwayFromPlayer && presser.IsValid() )
 		{

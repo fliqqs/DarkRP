@@ -292,6 +292,10 @@ public sealed partial class Player : Component, Component.IDamageable, PlayerCon
 			ConsoleSystem.Run( "undo" );
 		}
 
+		HandleDoorPurchaseInput();
+		HandleDoorLockInput();
+		HandleDoorSellInput();
+
 		GetComponent<PlayerInventory>()?.OnControl();
 
 		Scene.Get<Inventory>()?.HandleInput();

@@ -1,0 +1,288 @@
+using Sandbox.UI;
+
+public sealed partial class Player
+{
+	const float DoorCommandTraceDistance = 220.0f;
+	const float DoorPurchaseHoldDuration = 1.0f;
+
+	RoleplayDoor _doorPurchaseTarget;
+	TimeSince _doorPurchaseHoldElapsed;
+	bool _isDoorPurchaseHolding;
+	bool _hasTriggeredDoorPurchase;
+	float _doorPurchaseHoldProgress;
+
+	public bool IsDoorPurchaseHolding => _isDoorPurchaseHolding;
+	public float DoorPurchaseHoldProgress => _isDoorPurchaseHolding ? _doorPurchaseHoldProgress : 0.0f;
+	public RoleplayDoor DoorPurchaseTarget => _doorPurchaseTarget;
+
+	public float GetDoorPurchaseProgress( RoleplayDoor roleplayDoor )
+	{
+		if ( !_isDoorPurchaseHolding || !roleplayDoor.IsValid() || _doorPurchaseTarget != roleplayDoor )
+			return 0.0f;
+
+		return _doorPurchaseHoldProgress;
+	}
+
+	[ConCmd( "rp_door_buy", ConVarFlags.Server, Help = "Buy the roleplay door you are looking at." )]
+	public static void BuyLookedDoorCommand( Connection source )
+	{
+		var player = FindForConnection( source );
+		player?.TryBuyLookedDoor();
+	}
+
+	[ConCmd( "rp_door_lock", ConVarFlags.Server, Help = "Lock the roleplay door you own and are looking at." )]
+	public static void LockLookedDoorCommand( Connection source )
+	{
+		var player = FindForConnection( source );
+		player?.TrySetLookedDoorLockState( true );
+	}
+
+	[ConCmd( "rp_door_unlock", ConVarFlags.Server, Help = "Unlock the roleplay door you own and are looking at." )]
+	public static void UnlockLookedDoorCommand( Connection source )
+	{
+		var player = FindForConnection( source );
+		player?.TrySetLookedDoorLockState( false );
+	}
+
+	[ConCmd( "rp_door_toggle_lock", ConVarFlags.Server, Help = "Toggle lock state on the roleplay door you own and are looking at." )]
+	public static void ToggleLookedDoorLockCommand( Connection source )
+	{
+		var player = FindForConnection( source );
+		player?.TryToggleLookedDoorLock();
+	}
+
+	[ConCmd( "rp_door_sell", ConVarFlags.Server, Help = "Sell the roleplay door you own and are looking at." )]
+	public static void SellLookedDoorCommand( Connection source )
+	{
+		var player = FindForConnection( source );
+		player?.TrySellLookedDoor();
+	}
+
+	void HandleDoorPurchaseInput()
+	{
+		if ( !IsLocalPlayer )
+			return;
+
+		if ( !TryGetLookedRoleplayDoor( out var roleplayDoor ) || roleplayDoor.IsOwned )
+		{
+			ResetDoorPurchaseHold();
+			return;
+		}
+
+		if ( !Input.Down( "use" ) )
+		{
+			ResetDoorPurchaseHold();
+			return;
+		}
+
+		if ( _doorPurchaseTarget != roleplayDoor )
+		{
+			StartDoorPurchaseHold( roleplayDoor );
+		}
+
+		_isDoorPurchaseHolding = true;
+		Input.Clear( "use" );
+
+		if ( _hasTriggeredDoorPurchase )
+		{
+			_doorPurchaseHoldProgress = 1.0f;
+			return;
+		}
+
+		_doorPurchaseHoldProgress = Math.Clamp( _doorPurchaseHoldElapsed.Relative.Remap( 0.0f, DoorPurchaseHoldDuration, 0.0f, 1.0f ), 0.0f, 1.0f );
+
+		if ( _doorPurchaseHoldProgress < 1.0f )
+			return;
+
+		_doorPurchaseHoldProgress = 1.0f;
+		_hasTriggeredDoorPurchase = true;
+		RequestBuyLookedDoor();
+	}
+
+	void HandleDoorLockInput()
+	{
+		if ( !IsLocalPlayer || !Input.Pressed( "attack2" ) )
+			return;
+
+		if ( !TryGetLookedRoleplayDoor( out var roleplayDoor ) )
+			return;
+
+		if ( !roleplayDoor.IsOwnedBy( Network.Owner ) )
+			return;
+
+		RequestToggleLookedDoorLock();
+		Input.Clear( "attack2" );
+	}
+
+	void HandleDoorSellInput()
+	{
+		if ( !IsLocalPlayer || !Input.Pressed( "reload" ) )
+			return;
+
+		if ( !TryGetLookedRoleplayDoor( out var roleplayDoor ) )
+			return;
+
+		if ( !roleplayDoor.IsOwnedBy( Network.Owner ) )
+			return;
+
+		RequestSellLookedDoor();
+		Input.Clear( "reload" );
+	}
+
+	void StartDoorPurchaseHold( RoleplayDoor roleplayDoor )
+	{
+		_doorPurchaseTarget = roleplayDoor;
+		_doorPurchaseHoldElapsed = 0;
+		_doorPurchaseHoldProgress = 0.0f;
+		_hasTriggeredDoorPurchase = false;
+		_isDoorPurchaseHolding = true;
+	}
+
+	void ResetDoorPurchaseHold()
+	{
+		_doorPurchaseTarget = null;
+		_doorPurchaseHoldProgress = 0.0f;
+		_hasTriggeredDoorPurchase = false;
+		_isDoorPurchaseHolding = false;
+	}
+
+	void TryBuyLookedDoor()
+	{
+		if ( !Networking.IsHost || Network.Owner is null )
+			return;
+
+		if ( !TryGetLookedRoleplayDoor( out var roleplayDoor ) )
+		{
+			Notices.SendNotice( Network.Owner, "block", Color.Red, "Look at a roleplay door first.", 3 );
+			return;
+		}
+
+		if ( roleplayDoor.TryBuy( this, out var error ) )
+		{
+			var price = Math.Max( 0, roleplayDoor.PurchasePrice );
+			PlayDoorActionSound( "sounds/ui/ui.spawn.sound" );
+			Notices.SendNotice( Network.Owner, "$", Color.Green, $"Door purchased for ${price:n0}.", 3 );
+			return;
+		}
+
+		Notices.SendNotice( Network.Owner, "block", Color.Red, error, 3 );
+	}
+
+	void TrySetLookedDoorLockState( bool locked )
+	{
+		if ( !Networking.IsHost || Network.Owner is null )
+			return;
+
+		if ( !TryGetLookedRoleplayDoor( out var roleplayDoor ) )
+		{
+			Notices.SendNotice( Network.Owner, "block", Color.Red, "Look at a roleplay door first.", 3 );
+			return;
+		}
+
+		if ( roleplayDoor.TrySetLocked( this, locked, out var error ) )
+		{
+			var message = locked ? "Door locked." : "Door unlocked.";
+			var icon = locked ? "lock" : "lock_open";
+			Notices.SendNotice( Network.Owner, icon, Color.Green, message, 3 );
+			return;
+		}
+
+		Notices.SendNotice( Network.Owner, "block", Color.Red, error, 3 );
+	}
+
+	void TryToggleLookedDoorLock()
+	{
+		if ( !Networking.IsHost )
+			return;
+
+		if ( !TryGetLookedRoleplayDoor( out var roleplayDoor ) )
+			return;
+
+		TrySetLookedDoorLockState( !roleplayDoor.Door.IsLocked );
+	}
+
+	void TrySellLookedDoor()
+	{
+		if ( !Networking.IsHost || Network.Owner is null )
+			return;
+
+		if ( !TryGetLookedRoleplayDoor( out var roleplayDoor ) )
+		{
+			Notices.SendNotice( Network.Owner, "block", Color.Red, "Look at a roleplay door first.", 3 );
+			return;
+		}
+
+		if ( roleplayDoor.TrySell( this, out var refund, out var error ) )
+		{
+			PlayDoorActionSound( "sounds/ui/ui.undo.sound" );
+			Notices.SendNotice( Network.Owner, "$", Color.Green, $"Door sold for ${refund:n0}.", 3 );
+			return;
+		}
+
+		Notices.SendNotice( Network.Owner, "block", Color.Red, error, 3 );
+	}
+
+	[Rpc.Host]
+	void RequestBuyLookedDoor()
+	{
+		if ( Rpc.Caller != Network.Owner )
+			return;
+
+		TryBuyLookedDoor();
+	}
+
+	[Rpc.Host]
+	void RequestToggleLookedDoorLock()
+	{
+		if ( Rpc.Caller != Network.Owner )
+			return;
+
+		TryToggleLookedDoorLock();
+	}
+
+	[Rpc.Host]
+	void RequestSellLookedDoor()
+	{
+		if ( Rpc.Caller != Network.Owner )
+			return;
+
+		TrySellLookedDoor();
+	}
+
+	bool TryGetLookedRoleplayDoor( out RoleplayDoor roleplayDoor )
+	{
+		roleplayDoor = null;
+
+		var trace = Scene.Trace.Ray( EyeTransform.ForwardRay, DoorCommandTraceDistance )
+			.IgnoreGameObjectHierarchy( GameObject )
+			.WithoutTags( "player" )
+			.Run();
+
+		if ( !trace.Hit )
+			return false;
+
+		roleplayDoor = FindRoleplayDoor( trace.GameObject );
+		return roleplayDoor.IsValid();
+	}
+
+	static RoleplayDoor FindRoleplayDoor( GameObject gameObject )
+	{
+		for ( var current = gameObject; current.IsValid(); current = current.Parent )
+		{
+			var roleplayDoor = current.GetComponent<RoleplayDoor>();
+			if ( roleplayDoor.IsValid() )
+				return roleplayDoor;
+		}
+
+		return null;
+	}
+
+	[Rpc.Owner( NetFlags.HostOnly )]
+	void PlayDoorActionSound( string soundEvent )
+	{
+		if ( string.IsNullOrWhiteSpace( soundEvent ) )
+			return;
+
+		Sound.Play( soundEvent );
+	}
+}
