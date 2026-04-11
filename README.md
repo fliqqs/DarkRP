@@ -1,3 +1,12 @@
+# DarkRP for S&Box
+
+DarkRP is an open-source project focused on recreating DarkRP in s&box with a modular and maintainable architecture.
+I probably will not maintain this forever, but my goal is to build a clean, solid, reusable foundation.
+
+## Contributors
+
+Thanks to all current and future contributors for your time, ideas, and contributions to the project.
+
 <div align="center">
   <a href="https://github.com/Facepunch/sandbox">
     <img src="https://cdn.sbox.game/org/facepunch/sandbox/thumb/8d0a5169-0ce3-4520-b9e7-23bcafddf7fc.png" alt="Logo" width="450">

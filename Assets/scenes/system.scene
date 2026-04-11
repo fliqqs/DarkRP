@@ -619,7 +619,7 @@
           "RenderTexture": null,
           "TargetEye": "None",
           "Viewport": "0,0,1,1",
-          "ZFar": 5000,
+          "ZFar": 10000,
           "ZNear": 1
         },
         {
@@ -777,7 +777,7 @@
       },
       "Sandbox.Clutter.ClutterGridSystem": {
         "Storage": {
-          "$blob": "cc667bc6-32e3-4c10-a433-28cb2968a828"
+          "$blob": "3260bf34-b9bf-464f-89e6-21fec0a8fc77"
         }
       }
     }

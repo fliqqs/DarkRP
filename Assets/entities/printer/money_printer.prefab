@@ -54,13 +54,13 @@
         "__guid": "0f38a1d2-b4a0-4d3b-ad4b-442d26f6d495",
         "__enabled": true,
         "Flags": 0,
+        "DefinitionPath": "entities/printer/bronze.pdef",
         "OnComponentDestroy": null,
         "OnComponentDisabled": null,
         "OnComponentEnabled": null,
         "OnComponentFixedUpdate": null,
         "OnComponentStart": null,
         "OnComponentUpdate": null,
-        "PrinterType": "Bronze",
         "StoredMoney": 0
       },
       {
@@ -141,8 +141,25 @@
         "__guid": "7c05f88c-a013-4791-b10d-3087194a93b5",
         "__enabled": true,
         "Flags": 0,
+        "Distance": 512,
         "DistanceAttenuation": true,
         "DistanceAttenuationOverride": false,
+        "Falloff": [
+          {
+            "x": 0,
+            "y": 1,
+            "in": 3.1415927,
+            "out": -3.1415927,
+            "mode": "Mirrored"
+          },
+          {
+            "x": 1,
+            "y": 0,
+            "in": 0,
+            "out": 0,
+            "mode": "Mirrored"
+          }
+        ],
         "Force2d": false,
         "MaxRepeatTime": 1,
         "MinRepeatTime": 1,
@@ -160,7 +177,7 @@
         "ReflectionOverride": false,
         "Reflections": false,
         "Repeat": false,
-        "SoundEvent": "audio/printer.sound",
+        "SoundEvent": "entities/printer/sounds/printer.sound",
         "SoundOverride": false,
         "StopOnNew": false,
         "TargetMixer": {
@@ -208,11 +225,11 @@
               "BloomLayer": false,
               "AfterUILayer": false
             },
-            "Scale": 0.06,
+            "Scale": 0.1,
             "TextScope": {
               "Text": "$0",
               "TextColor": "1,1,1,1",
-              "FontName": "Poppins",
+              "FontName": "DS-Digital",
               "FontSize": 48,
               "FontWeight": 800,
               "FontItalic": false,

@@ -26,7 +26,7 @@
         "MaterialGroup": "orange",
         "MaterialOverride": null,
         "Materials": null,
-        "Model": "models/citizen_props/crate01.vmdl",
+        "Model": "models/sbox_props/wooden_crate/wooden_crate.vmdl",
         "OnComponentDestroy": null,
         "OnComponentDisabled": null,
         "OnComponentEnabled": null,
@@ -51,7 +51,7 @@
         "Elasticity": null,
         "Friction": null,
         "IsTrigger": false,
-        "Model": "models/citizen_props/crate01.vmdl",
+        "Model": "models/sbox_props/wooden_crate/wooden_crate.vmdl",
         "OnComponentDestroy": null,
         "OnComponentDisabled": null,
         "OnComponentEnabled": null,
@@ -143,7 +143,7 @@
         "__version": 2,
         "Flags": 0,
         "Name": "label",
-        "Position": "-0.8499997,16.39001,21.42001",
+        "Position": "0,14.78704,16.9983",
         "Rotation": "0,0,-0.7071068,0.7071068",
         "Scale": "1,1,1",
         "Tags": "",
@@ -195,7 +195,7 @@
                 "Color": "0,0,0,0.9"
               },
               "Shadow": {
-                "Enabled": false,
+                "Enabled": true,
                 "Size": 4,
                 "Color": "0,0,0,1",
                 "Offset": "4,4"
@@ -244,6 +244,8 @@
   "MenuPath": "DarkRP/Entities/Weapon Shipment",
   "MenuIcon": null,
   "DontBreakAsTemplate": false,
-  "__references": [],
+  "__references": [
+    "facepunch.wooden_crate#143950"
+  ],
   "__version": 2
 }
