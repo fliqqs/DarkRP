@@ -349,7 +349,7 @@
       }
     },
     {
-      "__guid": "6f65614b-1b7c-4b43-b7f7-b714717fefab",
+      "__guid": "511bbb25-6907-4548-bdcd-9d34b0d53210",
       "__version": 2,
       "__Prefab": "entities/sents/shatter_glass.prefab",
       "__PrefabInstancePatch": {
@@ -362,7 +362,7 @@
               "IdValue": "eb13d793-e834-4af4-bcf7-0cc871c4d1ee"
             },
             "Property": "Position",
-            "Value": "-89.40616,-231.5142,52.11214"
+            "Value": "-107.2306,-229.9634,1.999985"
           },
           {
             "Target": {
@@ -370,22 +370,15 @@
               "IdValue": "eb13d793-e834-4af4-bcf7-0cc871c4d1ee"
             },
             "Property": "Rotation",
-            "Value": "-0.5,0.5,0.5,0.5"
-          },
-          {
-            "Target": {
-              "Type": "Component",
-              "IdValue": "84882231-301c-4afb-9d2f-de8bd7281aba"
-            },
-            "Property": "RebuildDelay",
-            "Value": 30
+            "Value": "0,0,0,0.9999999"
           }
         ],
         "MovedObjects": []
       },
       "__PrefabIdToInstanceId": {
-        "eb13d793-e834-4af4-bcf7-0cc871c4d1ee": "6f65614b-1b7c-4b43-b7f7-b714717fefab",
-        "84882231-301c-4afb-9d2f-de8bd7281aba": "c78d35f6-6193-4562-8f43-53759e48ea21"
+        "eb13d793-e834-4af4-bcf7-0cc871c4d1ee": "511bbb25-6907-4548-bdcd-9d34b0d53210",
+        "fa7ba4d0-359e-4b5c-9228-4611906acb8f": "4eba061c-42dc-4f6e-8467-5f1824aa5702",
+        "84882231-301c-4afb-9d2f-de8bd7281aba": "e195ae5e-1766-4e8a-8fb1-dd34fcba4bf3"
       }
     }
   ],
@@ -410,7 +403,7 @@
     "GameObjectSystems": {
       "Sandbox.Clutter.ClutterGridSystem": {
         "Storage": {
-          "$blob": "a6011c24-d31d-473b-b185-07f62a1a728f"
+          "$blob": "41a375c7-d1fa-4b4c-96f4-180faf6e6c83"
         }
       },
       "Sandbox.MovieMaker.MovieRecorderSystem": {
