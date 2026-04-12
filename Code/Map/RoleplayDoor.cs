@@ -3,10 +3,15 @@ using System.Text.Json.Serialization;
 
 public sealed class RoleplayDoor : Component
 {
+	const string GovernmentJobCategory = "Government";
+
 	[RequireComponent] public Door Door { get; set; }
 
 	[Property, Sync( SyncFlags.FromHost )]
 	public int PurchasePrice { get; set; } = 500;
+
+	[Property, Sync( SyncFlags.FromHost )]
+	public bool IsGovernment { get; set; }
 
 	[Property, Group( "Sound" )]
 	public SoundEvent LockSound { get; set; } = new( "entities/door/sounds/door_lock.sound" );
@@ -25,6 +30,7 @@ public sealed class RoleplayDoor : Component
 	}
 
 	public bool IsOwned => Owner is not null;
+	public bool CanBePurchased => !IsGovernment && !IsOwned;
 
 	public bool IsOwnedBy( Connection connection )
 	{
@@ -44,6 +50,16 @@ public sealed class RoleplayDoor : Component
 		if ( !CanPress( e, state ) )
 			return false;
 
+		var player = GetPlayer( e );
+		if ( IsGovernment )
+		{
+			if ( !CanUseDoor( player ) || !e.Source.IsValid() )
+				return false;
+
+			Door.Toggle( e.Source.GameObject );
+			return true;
+		}
+
 		if ( !IsOwned )
 			return true;
 
@@ -61,6 +77,12 @@ public sealed class RoleplayDoor : Component
 		if ( !Networking.IsHost || !buyer.IsValid() )
 		{
 			error = "Invalid door purchase request.";
+			return false;
+		}
+
+		if ( IsGovernment )
+		{
+			error = "Government doors can't be bought.";
 			return false;
 		}
 
@@ -90,6 +112,12 @@ public sealed class RoleplayDoor : Component
 		if ( !Networking.IsHost || !seller.IsValid() )
 		{
 			error = "Invalid door sale request.";
+			return false;
+		}
+
+		if ( IsGovernment )
+		{
+			error = "Government doors can't be sold.";
 			return false;
 		}
 
@@ -127,7 +155,15 @@ public sealed class RoleplayDoor : Component
 			return false;
 		}
 
-		if ( !IsOwnedBy( actor.Network.Owner ) )
+		if ( IsGovernment )
+		{
+			if ( !CanAccessGovernmentDoor( actor ) )
+			{
+				error = "Only government jobs can do that.";
+				return false;
+			}
+		}
+		else if ( !IsOwnedBy( actor.Network.Owner ) )
 		{
 			error = IsOwned ? "Only the door owner can do that." : "Buy this door first.";
 			return false;
@@ -161,6 +197,17 @@ public sealed class RoleplayDoor : Component
 		var title = state == Door.DoorState.Open ? "Close" : "Open";
 		var icon = Door.IsLocked ? "lock" : "door_front";
 
+		if ( IsGovernment )
+		{
+			if ( CanAccessGovernmentDoor( player ) )
+			{
+				var action = Door.IsLocked ? "unlock" : "lock";
+				return new IPressable.Tooltip( title, icon, $"Government door - Right click to {action}" );
+			}
+
+			return new IPressable.Tooltip( "Government Door", "lock", "Police, Police Chief and Mayor access only" );
+		}
+
 		if ( !IsOwned )
 		{
 			var price = Math.Max( 0, PurchasePrice );
@@ -186,6 +233,51 @@ public sealed class RoleplayDoor : Component
 		var ownerName = Owner?.DisplayName ?? "Unknown";
 		var lockState = Door.IsLocked ? "locked" : "unlocked";
 		return new IPressable.Tooltip( title, icon, $"Owned by {ownerName} ({lockState})" );
+	}
+
+	public bool CanControlLock( Player player )
+	{
+		if ( !player.IsValid() )
+			return false;
+
+		if ( IsGovernment )
+			return CanAccessGovernmentDoor( player );
+
+		return IsOwnedBy( player.Network.Owner );
+	}
+
+	public bool CanUseDoor( Player player )
+	{
+		if ( !player.IsValid() )
+			return false;
+
+		if ( IsGovernment )
+			return CanAccessGovernmentDoor( player );
+
+		if ( !IsOwned )
+			return false;
+
+		if ( Door.IsLocked )
+			return IsOwnedBy( player.Network.Owner );
+
+		return true;
+	}
+
+	static Player GetPlayer( IPressable.Event e )
+	{
+		if ( !e.Source.IsValid() )
+			return null;
+
+		return e.Source.GameObject.Root.GetComponent<Player>();
+	}
+
+	static bool CanAccessGovernmentDoor( Player player )
+	{
+		if ( !player.IsValid() )
+			return false;
+
+		var category = player.CurrentJobDefinition?.Category?.Trim();
+		return string.Equals( category, GovernmentJobCategory, StringComparison.OrdinalIgnoreCase );
 	}
 
 	[Rpc.Broadcast]

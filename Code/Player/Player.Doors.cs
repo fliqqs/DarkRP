@@ -63,7 +63,7 @@ public sealed partial class Player
 		if ( !IsLocalPlayer )
 			return;
 
-		if ( !TryGetLookedRoleplayDoor( out var roleplayDoor ) || roleplayDoor.IsOwned )
+		if ( !TryGetLookedRoleplayDoor( out var roleplayDoor ) || !roleplayDoor.CanBePurchased )
 		{
 			ResetDoorPurchaseHold();
 			return;
@@ -107,7 +107,7 @@ public sealed partial class Player
 		if ( !TryGetLookedRoleplayDoor( out var roleplayDoor ) )
 			return;
 
-		if ( !roleplayDoor.IsOwnedBy( Network.Owner ) )
+		if ( !roleplayDoor.CanControlLock( this ) )
 			return;
 
 		RequestToggleLookedDoorLock();

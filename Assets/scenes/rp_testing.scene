@@ -322,7 +322,7 @@
               "IdValue": "5c0b2848-2f1a-4821-8b67-7e108b715ca7"
             },
             "Property": "Position",
-            "Value": "87.62815,-231.3019,0.6249993"
+            "Value": "145.7535,-231.3019,0.6249993"
           },
           {
             "Target": {
@@ -349,6 +349,62 @@
       }
     },
     {
+      "__guid": "70bb3855-1022-4957-846f-f1182e9764fe",
+      "__version": 2,
+      "__Prefab": "entities/door/roleplay_door.prefab",
+      "__PrefabInstancePatch": {
+        "AddedObjects": [],
+        "RemovedObjects": [],
+        "PropertyOverrides": [
+          {
+            "Target": {
+              "Type": "GameObject",
+              "IdValue": "5c0b2848-2f1a-4821-8b67-7e108b715ca7"
+            },
+            "Property": "Name",
+            "Value": "roleplay_door (1)"
+          },
+          {
+            "Target": {
+              "Type": "GameObject",
+              "IdValue": "5c0b2848-2f1a-4821-8b67-7e108b715ca7"
+            },
+            "Property": "Position",
+            "Value": "48.02077,-231.3019,0.6249993"
+          },
+          {
+            "Target": {
+              "Type": "GameObject",
+              "IdValue": "5c0b2848-2f1a-4821-8b67-7e108b715ca7"
+            },
+            "Property": "Rotation",
+            "Value": "0,0,-0.7071067,0.7071068"
+          },
+          {
+            "Target": {
+              "Type": "Component",
+              "IdValue": "0c2c81fc-beb6-4df7-a04e-de6e3dbff7ae"
+            },
+            "Property": "IsGovernment",
+            "Value": true
+          }
+        ],
+        "MovedObjects": []
+      },
+      "__PrefabIdToInstanceId": {
+        "5c0b2848-2f1a-4821-8b67-7e108b715ca7": "70bb3855-1022-4957-846f-f1182e9764fe",
+        "37ddcf29-6df0-46c6-ac21-9e4c05d34e87": "bd9736ab-1666-43b5-85b4-9a61a7757602",
+        "0c2c81fc-beb6-4df7-a04e-de6e3dbff7ae": "2dd1e7c5-d8df-4347-b882-ee490a1d5c8e",
+        "012ba01a-c345-4855-be53-6a942c1d21e9": "ffd10118-7b82-4396-b1a5-8901fb40bce8",
+        "4c7bf97a-1c50-40b0-8bde-8477712a7fdf": "b1b05ddd-472b-4c93-b6ef-13800e53fe05",
+        "aa7b02ca-2781-4188-af14-7bff30b20362": "bcc9481f-f9a1-4a03-b107-29e806c0c8ad",
+        "363d322d-e56d-422a-aa43-de0ec59d498b": "215920c0-5bb6-4c08-adea-1c16937a96b6",
+        "07f73016-9b45-4a07-861d-1f64c99a547b": "5f3ab9fe-acc6-4254-9553-f2449b94606c",
+        "c136a90f-132f-4103-9062-9058b99812ca": "4f2f2391-b0e4-4b5b-93cd-5d7a72aec936",
+        "aabc02e6-1395-4ea6-9c20-7126f3b4b807": "bc3cf811-ea0f-4e67-afed-6dda86b84d27"
+      }
+    },
+    {
       "__guid": "511bbb25-6907-4548-bdcd-9d34b0d53210",
       "__version": 2,
       "__Prefab": "entities/sents/shatter_glass.prefab",
@@ -363,14 +419,6 @@
             },
             "Property": "Position",
             "Value": "-107.2306,-229.9634,1.999985"
-          },
-          {
-            "Target": {
-              "Type": "GameObject",
-              "IdValue": "eb13d793-e834-4af4-bcf7-0cc871c4d1ee"
-            },
-            "Property": "Rotation",
-            "Value": "0,0,0,0.9999999"
           }
         ],
         "MovedObjects": []
@@ -403,7 +451,7 @@
     "GameObjectSystems": {
       "Sandbox.Clutter.ClutterGridSystem": {
         "Storage": {
-          "$blob": "41a375c7-d1fa-4b4c-96f4-180faf6e6c83"
+          "$blob": "0998f8c4-eac8-4dbe-9832-831cd7896faa"
         }
       },
       "Sandbox.MovieMaker.MovieRecorderSystem": {

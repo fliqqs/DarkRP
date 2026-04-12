@@ -66,6 +66,7 @@
         "OnComponentFixedUpdate": null,
         "OnComponentStart": null,
         "OnComponentUpdate": null,
+        "IsGovernment": false,
         "PurchasePrice": 500,
         "UnlockSound": null
       },

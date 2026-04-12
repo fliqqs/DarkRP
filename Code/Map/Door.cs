@@ -168,6 +168,9 @@ public sealed class Door : Component, Component.IPressable
 	[ActionGraphNode( "sandbox.door.open" ), Pure]
 	public void Open( GameObject presser )
 	{
+		if ( !CanUseRoleplayDoor( presser ) )
+			return;
+
 		if ( State is DoorState.Open or DoorState.Opening )
 		{
 			return;
@@ -202,6 +205,9 @@ public sealed class Door : Component, Component.IPressable
 	[ActionGraphNode( "sandbox.door.close" ), Pure]
 	public void Close()
 	{
+		if ( !CanUseRoleplayDoor( null ) )
+			return;
+
 		// Don't do anything if already closed or closing
 		if ( State is DoorState.Closed or DoorState.Closing )
 			return;
@@ -220,6 +226,9 @@ public sealed class Door : Component, Component.IPressable
 	[ActionGraphNode( "sandbox.door.toggle" ), Pure]
 	public void Toggle( GameObject presser )
 	{
+		if ( !CanUseRoleplayDoor( presser ) )
+			return;
+
 		if ( State is DoorState.Closed )
 		{
 			Open( presser );
@@ -228,6 +237,23 @@ public sealed class Door : Component, Component.IPressable
 		{
 			Close();
 		}
+	}
+
+	bool CanUseRoleplayDoor( GameObject presser )
+	{
+		var roleplayDoor = GameObject.GetComponent<global::RoleplayDoor>();
+		if ( !roleplayDoor.IsValid() )
+			return true;
+
+		var caller = global::Player.FindForConnection( Rpc.Caller );
+		if ( caller.IsValid() )
+			return roleplayDoor.CanUseDoor( caller );
+
+		var player = presser.IsValid() ? presser.Root.GetComponent<global::Player>() : null;
+		if ( player.IsValid() )
+			return roleplayDoor.CanUseDoor( player );
+
+		return Rpc.Caller is null;
 	}
 
 	[Rpc.Broadcast]
