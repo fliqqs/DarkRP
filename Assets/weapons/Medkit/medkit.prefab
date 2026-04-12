@@ -47,6 +47,7 @@
         },
         "HealAmount": 4,
         "HealInterval": 0.25,
+        "OverhealMaxHealth": 130,
         "HealRange": 128,
         "HealSound": "sounds/ui/ui.select.sound",
         "HoldType": "HoldItem",

@@ -2,8 +2,11 @@ using Sandbox.Rendering;
 
 public sealed class MedkitWeapon : BaseWeapon
 {
+	private const string MedicJobDefinitionPath = "jobs/medic.jobdef";
+
 	[Property, Group( "Healing" )] public float HealAmount { get; set; } = 4f;
 	[Property, Group( "Healing" )] public float HealInterval { get; set; } = 0.25f;
+	[Property, Group( "Healing" )] public float OverhealMaxHealth { get; set; } = 130f;
 	[Property, Group( "Healing" )] public float HealRange { get; set; } = 128f;
 	[Property, Group( "Healing" )] public float TraceRadius { get; set; } = 10f;
 	[Property, Group( "Healing" )] public SoundEvent HealSound { get; set; }
@@ -54,15 +57,24 @@ public sealed class MedkitWeapon : BaseWeapon
 		if ( !target.IsValid() )
 			return;
 
-		if ( target.Health <= 0f || target.MaxHealth <= 0f || target.Health >= target.MaxHealth )
+		var maxHealth = GetHealLimit( player, target );
+		if ( target.Health <= 0f || maxHealth <= 0f || target.Health >= maxHealth )
 			return;
 
-		var newHealth = (target.Health + HealAmount).Clamp( 0f, target.MaxHealth );
+		var newHealth = (target.Health + HealAmount).Clamp( 0f, maxHealth );
 		if ( newHealth <= target.Health )
 			return;
 
 		target.Health = newHealth;
 		HealEffects( target.GameObject );
+	}
+
+	private float GetHealLimit( Player healer, Player target )
+	{
+		if ( healer.IsValid() && string.Equals( healer.JobDefinitionPath, MedicJobDefinitionPath, StringComparison.OrdinalIgnoreCase ) )
+			return MathF.Max( target.MaxHealth, OverhealMaxHealth );
+
+		return target.MaxHealth;
 	}
 
 	private Player FindTarget( Player player )
