@@ -322,7 +322,7 @@
               "IdValue": "5c0b2848-2f1a-4821-8b67-7e108b715ca7"
             },
             "Property": "Position",
-            "Value": "72.79475,-231.3019,0.6249993"
+            "Value": "87.62815,-231.3019,0.6249993"
           },
           {
             "Target": {
@@ -347,6 +347,46 @@
         "c136a90f-132f-4103-9062-9058b99812ca": "a38eeba5-1297-495f-a416-eacc906b97e5",
         "aabc02e6-1395-4ea6-9c20-7126f3b4b807": "c0b490d9-3d17-4e22-91d9-af103891dfa4"
       }
+    },
+    {
+      "__guid": "6f65614b-1b7c-4b43-b7f7-b714717fefab",
+      "__version": 2,
+      "__Prefab": "entities/sents/shatter_glass.prefab",
+      "__PrefabInstancePatch": {
+        "AddedObjects": [],
+        "RemovedObjects": [],
+        "PropertyOverrides": [
+          {
+            "Target": {
+              "Type": "GameObject",
+              "IdValue": "eb13d793-e834-4af4-bcf7-0cc871c4d1ee"
+            },
+            "Property": "Position",
+            "Value": "-89.40616,-231.5142,52.11214"
+          },
+          {
+            "Target": {
+              "Type": "GameObject",
+              "IdValue": "eb13d793-e834-4af4-bcf7-0cc871c4d1ee"
+            },
+            "Property": "Rotation",
+            "Value": "-0.5,0.5,0.5,0.5"
+          },
+          {
+            "Target": {
+              "Type": "Component",
+              "IdValue": "84882231-301c-4afb-9d2f-de8bd7281aba"
+            },
+            "Property": "RebuildDelay",
+            "Value": 30
+          }
+        ],
+        "MovedObjects": []
+      },
+      "__PrefabIdToInstanceId": {
+        "eb13d793-e834-4af4-bcf7-0cc871c4d1ee": "6f65614b-1b7c-4b43-b7f7-b714717fefab",
+        "84882231-301c-4afb-9d2f-de8bd7281aba": "c78d35f6-6193-4562-8f43-53759e48ea21"
+      }
     }
   ],
   "SceneProperties": {
@@ -368,13 +408,13 @@
       "CustomBounds": false
     },
     "GameObjectSystems": {
-      "Sandbox.MovieMaker.MovieRecorderSystem": {
-        "DisableClientRecording": false
-      },
       "Sandbox.Clutter.ClutterGridSystem": {
         "Storage": {
-          "$blob": "871d1621-53a5-41c4-970e-2cc8550178aa"
+          "$blob": "a6011c24-d31d-473b-b185-07f62a1a728f"
         }
+      },
+      "Sandbox.MovieMaker.MovieRecorderSystem": {
+        "DisableClientRecording": false
       }
     }
   },
