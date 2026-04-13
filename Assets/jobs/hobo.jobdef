@@ -8,7 +8,8 @@
   "Command": "/hobo",
   "Order": 90,
   "StartingItems": [
-    "weapons/crowbar/crowbar.prefab"
+    "weapons/crowbar/crowbar.prefab",
+    "weapons/ragebait/ragebait.prefab"
   ],
   "Clothing": [
     "models/citizen_clothes/hat/flatcap/flatcap.clothing",

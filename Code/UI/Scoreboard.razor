@@ -255,6 +255,18 @@
                                                             Disabled="@(!CanBuyShipment( item ))"
                                                             @onclick="@(() => BuyShipment( item ))" />
                                                 }
+                                                else if ( !string.IsNullOrWhiteSpace( item.MiscPrefabPath ) )
+                                                {
+                                                    @if ( string.Equals( item.MiscPrefabPath, TipJar.PrefabPath, StringComparison.OrdinalIgnoreCase ) )
+                                                    {
+                                                        <label class="shop-meta-item">Owned: @TipJar.CountOwned( Connection.Local ) / @TipJar.MaxOwnedPerPlayer</label>
+                                                    }
+
+                                                    <Button Text="Buy"
+                                                            class="menu-action primary shop-buy"
+                                                            Disabled="@(!CanBuyMiscItem( item ))"
+                                                            @onclick="@(() => BuyMiscItem( item ))" />
+                                                }
                                                 else
                                                 {
                                                     <label class="placeholder-tag">Placeholder</label>
@@ -458,6 +470,7 @@
             string printerDefinitionPath = null,
             string weaponPrefabPath = null,
             string shipmentWeaponPrefabPath = null,
+            string miscPrefabPath = null,
             int shipmentCount = 0 )
         {
             Name = name;
@@ -466,6 +479,7 @@
             PrinterDefinitionPath = printerDefinitionPath;
             WeaponPrefabPath = weaponPrefabPath;
             ShipmentWeaponPrefabPath = shipmentWeaponPrefabPath;
+            MiscPrefabPath = miscPrefabPath;
             ShipmentCount = shipmentCount;
         }
 
@@ -475,6 +489,7 @@
         public string PrinterDefinitionPath { get; }
         public string WeaponPrefabPath { get; }
         public string ShipmentWeaponPrefabPath { get; }
+        public string MiscPrefabPath { get; }
         public int ShipmentCount { get; }
     }
 
@@ -547,6 +562,18 @@
 
                 var definition = WeaponShipmentCatalog.Get( item.ShipmentWeaponPrefabPath );
                 return WeaponShipmentCatalog.ShouldShowInShop( LocalPlayer, definition );
+            } );
+        }
+
+        if ( CurrentShopSection.Title == "Miscellaneous" )
+        {
+            return CurrentShopSection.Items.Where( item =>
+            {
+                if ( string.IsNullOrWhiteSpace( item.MiscPrefabPath ) )
+                    return true;
+
+                var definition = MiscShopCatalog.Get( item.MiscPrefabPath );
+                return MiscShopCatalog.ShouldShowInShop( LocalPlayer, definition );
             } );
         }
 
@@ -679,6 +706,15 @@
             && WeaponShipmentCatalog.CanPlayerBuy( LocalPlayer, item.ShipmentWeaponPrefabPath, out _ );
     }
 
+    bool CanBuyMiscItem( ShopItem item )
+    {
+        return !string.IsNullOrWhiteSpace( item.MiscPrefabPath )
+            && LocalPlayer?.CanAfford( item.Price ) == true
+            && MiscShopCatalog.CanPlayerBuy( LocalPlayer, item.MiscPrefabPath, out _ )
+            && (!string.Equals( item.MiscPrefabPath, TipJar.PrefabPath, StringComparison.OrdinalIgnoreCase )
+                || TipJar.CountOwned( Connection.Local ) < TipJar.MaxOwnedPerPlayer);
+    }
+
     string GetPrinterRateText( ShopItem item )
     {
         if ( string.IsNullOrWhiteSpace( item.PrinterDefinitionPath ) )
@@ -715,6 +751,14 @@
         LocalPlayer?.RequestBuyWeaponShipment( item.ShipmentWeaponPrefabPath );
     }
 
+    void BuyMiscItem( ShopItem item )
+    {
+        if ( string.IsNullOrWhiteSpace( item.MiscPrefabPath ) )
+            return;
+
+        LocalPlayer?.RequestBuyMiscItem( item.MiscPrefabPath );
+    }
+
     ShopSection[] BuildShopSections()
     {
         return
@@ -743,6 +787,13 @@
                         x.Description,
                         shipmentWeaponPrefabPath: x.WeaponPrefabPath,
                         shipmentCount: x.WeaponsPerShipment ) )
+                    .ToArray()
+            ),
+            new ShopSection(
+                "Miscellaneous",
+                "Job utility items and roleplay equipment.",
+                MiscShopCatalog.GetAll()
+                    .Select( x => new ShopItem( x.Title, x.Price, x.Description, miscPrefabPath: x.PrefabPath ) )
                     .ToArray()
             )
         ];
@@ -979,6 +1030,7 @@
                 hash.Add( LocalPlayerMoney );
                 hash.Add( LocalPlayer?.JobDefinitionPath );
                 hash.Add( LocalOwnedPrinterCount );
+                hash.Add( TipJar.CountOwned( Connection.Local ) );
                 hash.Add( PrinterDefinitions.Count );
 
                 foreach ( var definition in PrinterDefinitions )
